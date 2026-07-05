@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050510" />
+  <title>Laser Flow — Stay Moving. Stay Alive.</title>
+  <meta name="description" content="Laser Flow is a premium neon survival arena. Dodge endless lasers, master special events, and beat your best time. Built for desktop and mobile." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- Menu background canvas (home/settings) -->
+    <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+    <!-- Game canvas (countdown/playing/paused/gameover) -->
+    <canvas id="game-canvas" class="game-canvas hidden" aria-hidden="true"></canvas>
+
+    <!-- ============ HOME SCREEN ============ -->
+    <div id="screen-home" class="screen screen-home">
+      <header class="top-bar">
+        <div class="brand">
+          <span id="home-diff-dot" class="diff-dot"></span>
+          <span class="brand-text">LASER&nbsp;FLOW</span>
+        </div>
+        <button id="btn-customize" class="chip-btn" aria-label="Customize">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+          <span class="hide-sm">Customize</span>
+        </button>
+      </header>
+
+      <main class="home-center">
+        <h1 class="title lf-title-gradient">LASER FLOW</h1>
+        <p class="hook">STAY MOVING. STAY ALIVE.</p>
+
+        <div id="home-difficulty-chips" class="difficulty-chips"></div>
+
+        <div class="start-wrap">
+          <button id="btn-start" class="start-btn lf-start-glow">
+            <svg class="icon icon-lg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            START
+          </button>
+          <button id="btn-daily" class="daily-btn chip-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            DAILY CHALLENGE
+            <span class="dot-sep">·</span>
+            <span id="home-daily-best" class="daily-best-time">00:00.00</span>
+          </button>
+        </div>
+
+        <div class="best-time-pill">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <span class="best-label">BEST · <span id="home-best-diff">Normal</span></span>
+          <span id="home-best-time" class="best-time-value">00:00.00</span>
+        </div>
+        <p class="seed-hint">Daily seed <span id="home-seed">—</span> · same arena for everyone today</p>
+      </main>
+
+      <footer class="bottom-toggles">
+        <button id="btn-sound" class="toggle-btn" aria-label="Sound" aria-pressed="true"></button>
+        <button id="btn-music" class="toggle-btn" aria-label="Music" aria-pressed="true"></button>
+        <button id="btn-vibration" class="toggle-btn" aria-label="Vibration" aria-pressed="true"></button>
+      </footer>
+    </div>
+
+    <!-- ============ SETTINGS SCREEN ============ -->
+    <div id="screen-settings" class="screen screen-settings hidden">
+      <header class="top-bar">
+        <button id="btn-settings-back" class="chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          Back
+        </button>
+        <h2 class="section-heading">CUSTOMIZE</h2>
+        <span class="spacer-w16"></span>
+      </header>
+      <main id="settings-content" class="settings-content lf-scroll"></main>
+    </div>
+
+    <!-- ============ COUNTDOWN ============ -->
+    <div id="screen-countdown" class="overlay hidden">
+      <div id="countdown-text" class="countdown-text"></div>
+    </div>
+
+    <!-- ============ HUD (playing) ============ -->
+    <div id="hud" class="hud hidden">
+      <div class="hud-tl">
+        <div class="hud-diff">
+          <span id="hud-diff-dot" class="diff-dot"></span>
+          <span id="hud-diff-name" class="hud-diff-name"></span>
+        </div>
+        <div id="hud-best" class="hud-best">BEST 00:00.00</div>
+      </div>
+      <div class="hud-tc">
+        <div id="hud-time" class="hud-time">00:00.00</div>
+        <div class="hud-survival">SURVIVAL</div>
+        <div class="hud-intensity-track"><div id="hud-intensity" class="hud-intensity-fill"></div></div>
+      </div>
+      <button id="btn-pause" class="hud-pause chip-btn" aria-label="Pause">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <!-- Flow meter (left) -->
+      <div class="flow-meter">
+        <span id="flow-mult" class="flow-mult">×1</span>
+        <div class="flow-bar-track"><div id="flow-bar" class="flow-bar-fill"></div></div>
+        <span class="flow-label">FLOW</span>
+      </div>
+      <!-- Power-up badges (right) -->
+      <div id="powerup-badges" class="powerup-badges"></div>
+      <!-- Special event label -->
+      <div id="special-label" class="special-label hidden"></div>
+      <!-- Milestone callout -->
+      <div id="milestone" class="milestone hidden"></div>
+    </div>
+
+    <!-- ============ JOYSTICK ============ -->
+    <div id="joystick-zone" class="joystick-zone hidden"></div>
+
+    <!-- ============ TUTORIAL HINT ============ -->
+    <div id="tutorial-hint" class="tutorial-hint hidden">
+      <div class="tutorial-panel">
+        <div id="tutorial-main" class="tutorial-main"></div>
+        <div class="tutorial-sub">Graze lasers to charge Flow · grab power-ups · keep moving!</div>
+      </div>
+    </div>
+
+    <!-- ============ PAUSE ============ -->
+    <div id="screen-pause" class="overlay overlay-dim hidden">
+      <div class="modal-panel">
+        <h2 class="modal-title">PAUSED</h2>
+        <p class="modal-sub">Take a breath. Lasers wait.</p>
+        <button id="btn-resume" class="btn-primary lf-start-glow">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          RESUME
+        </button>
+        <button id="btn-pause-settings" class="btn-secondary chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>
+          Change Settings
+        </button>
+        <button id="btn-pause-home" class="btn-secondary chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Return Home
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ GAME OVER ============ -->
+    <div id="screen-gameover" class="overlay overlay-dim lf-scroll hidden">
+      <div id="gameover-panel" class="modal-panel gameover-panel">
+        <div class="result-label" id="go-label">SURVIVAL TIME</div>
+        <div id="go-time" class="result-time">00:00.00</div>
+        <div id="go-newbest" class="newbest-badge hidden">NEW BEST</div>
+        <p id="go-msg" class="go-msg"></p>
+        <div id="go-stats" class="go-stats"></div>
+        <div id="go-achievements" class="go-achievements hidden"></div>
+        <div id="go-daily-panel" class="hidden"></div>
+        <div class="go-actions">
+          <button id="btn-replay" class="btn-primary lf-start-glow">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            REPLAY
+          </button>
+          <button id="btn-save-clip" class="btn-secondary chip-btn hidden">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="save-clip-label">Save Clip</span>
+          </button>
+          <div class="go-actions-row">
+            <button id="btn-go-settings" class="btn-secondary chip-btn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>
+              Settings
+            </button>
+            <button id="btn-go-home" class="btn-secondary chip-btn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Home
+            </button>
+          </div>
+        </div>
+        <div class="go-tip"><svg class="icon-xs" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Tip: keep moving — standing still is a death sentence</div>
+      </div>
+    </div>
+
+    <!-- brand watermark during play -->
+    <div id="watermark" class="watermark hidden">LASER FLOW</div>
+
+    <!-- loading splash (before JS init) -->
+    <div id="loading" class="loading">LASER FLOW</div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/recorder.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
