@@ -1,0 +1,2750 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#050510" />
+  <title>Laser Flow — Stay Moving. Stay Alive.</title>
+  <meta name="description" content="Laser Flow is a premium neon survival arena. Dodge endless lasers, master special events, and beat your best time. Built for desktop and mobile." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&family=Geist+Mono:wght@400;500&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet" />
+  <style>
+/* Laser Flow — styles. Neon minimalist aesthetic. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #050510;
+  --radius: 0.625rem;
+  --font-sans: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+  --font-display: 'Orbitron', var(--font-sans), sans-serif;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: #fff;
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.font-display, .title, .hook, .brand-text, .section-heading, .start-btn,
+.daily-btn, .countdown-text, .hud-time, .hud-diff-name, .flow-mult, .flow-label,
+.hud-survival, .modal-title, .result-time, .result-label, .go-msg,
+.btn-primary, .best-time-value, .daily-best-time, .milestone,
+.special-label, .tutorial-main, .hud-best, .watermark, .loading {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+}
+
+/* ---------- app / screens ---------- */
+.app { position: relative; height: 100dvh; width: 100%; overflow: hidden; background: var(--bg); }
+.hidden { display: none !important; }
+
+.bg-canvas, .game-canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0;
+  touch-action: none;
+}
+.bg-canvas { z-index: 0; }
+.game-canvas { z-index: 1; }
+
+.screen { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; min-height: 100dvh; }
+.screen-home, .screen-settings { z-index: 5; }
+.screen.fade-in { animation: fadeIn .4s ease; }
+.screen.fade-out { animation: fadeOut .35s ease forwards; }
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+@keyframes fadeOut { from { opacity: 1 } to { opacity: 0 } }
+
+/* ---------- top bar ---------- */
+.top-bar {
+  position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 20px; 
+}
+@media (min-width: 640px) { .top-bar { padding: 28px 32px; } }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand-text { font-size: 12px; font-weight: 700; letter-spacing: 0.35em; color: rgba(103, 232, 249, 0.8); }
+.diff-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.spacer-w16 { width: 64px; }
+.hide-sm { display: none; }
+@media (min-width: 640px) { .hide-sm { display: inline; } }
+
+/* ---------- chips & buttons ---------- */
+.chip-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px;
+  border-radius: 9999px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease, box-shadow .12s ease, color .12s ease;
+}
+.chip-btn:hover { transform: translateY(-1px); color: #fff; }
+.chip-btn:active { transform: translateY(0) scale(0.97); }
+.icon { width: 16px; height: 16px; flex-shrink: 0; }
+.icon-sm { width: 14px; height: 14px; flex-shrink: 0; }
+.icon-xs { width: 12px; height: 12px; flex-shrink: 0; }
+.icon-lg { width: 28px; height: 28px; }
+@media (min-width: 640px) { .chip-btn { height: 44px; } .icon-lg { width: 32px; height: 32px; } }
+
+/* ---------- home center ---------- */
+.home-center { position: relative; z-index: 10; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 24px 24px; text-align: center; }
+.title {
+  font-size: 48px; font-weight: 900; line-height: 1; letter-spacing: -0.02em;
+  filter: drop-shadow(0 0 28px rgba(34,211,238,0.35));
+  animation: titleIn .8s ease;
+}
+@media (min-width: 640px) { .title { font-size: 72px; } }
+@media (min-width: 768px) { .title { font-size: 96px; } }
+@keyframes titleIn { from { opacity: 0; transform: scale(0.92) } to { opacity: 1; transform: scale(1) } }
+
+.lf-title-gradient {
+  background: linear-gradient(90deg, #67e8f9 0%, #22d3ee 25%, #a855f7 50%, #f472b6 75%, #67e8f9 100%);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+@keyframes shimmer { 0% { background-position: -200% 0 } 100% { background-position: 200% 0 } }
+
+.hook { margin-top: 16px; font-size: 14px; font-weight: 500; letter-spacing: 0.3em; color: rgba(255,255,255,0.7); animation: fadeIn .6s .35s both; }
+@media (min-width: 640px) { .hook { font-size: 16px; } }
+
+.difficulty-chips { margin-top: 36px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; animation: fadeIn .5s .45s both; }
+@media (min-width: 640px) { .difficulty-chips { gap: 12px; } }
+.diff-chip {
+  border-radius: 9999px; padding: 8px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7);
+  cursor: pointer; transition: all .12s ease;
+}
+.diff-chip:hover { transform: translateY(-1px); }
+@media (min-width: 640px) { .diff-chip { padding: 10px 20px; font-size: 14px; } }
+
+.start-wrap { position: relative; margin-top: 40px; display: flex; flex-direction: column; align-items: center; animation: fadeIn .5s .6s both; }
+.start-btn {
+  position: relative; display: flex; height: 80px; align-items: center; justify-content: center; gap: 12px;
+  border: none; border-radius: 16px; padding: 0 48px; font-size: 24px; font-weight: 700; letter-spacing: 0.1em;
+  color: #020617; cursor: pointer; background: linear-gradient(90deg, rgba(34,211,238,0.9), rgba(56,189,248,0.9), rgba(34,211,238,0.9));
+  animation: floatBtn 2.4s ease-in-out infinite; transition: transform .12s ease;
+}
+.start-btn:hover { transform: scale(1.04); }
+.start-btn:active { transform: scale(0.97); }
+@media (min-width: 640px) { .start-btn { height: 96px; padding: 0 64px; font-size: 30px; } }
+@keyframes floatBtn { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-5px) } }
+.start-btn::after {
+  content: ''; position: absolute; inset: 0; border-radius: 16px; border: 2px solid rgba(34,211,238,0.6);
+  animation: pulseRing 2.2s ease-out infinite; pointer-events: none;
+}
+@keyframes pulseRing { 0% { transform: scale(0.9); opacity: 0.7 } 70% { transform: scale(1.25); opacity: 0 } 100% { transform: scale(1.25); opacity: 0 } }
+
+.lf-start-glow {
+  box-shadow: 0 0 0 1px rgba(34,211,238,0.4), 0 0 24px rgba(34,211,238,0.45), 0 0 60px rgba(34,211,238,0.25), inset 0 0 18px rgba(103,232,249,0.25);
+}
+
+.daily-btn { margin-top: 12px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.8); border-color: rgba(168,85,247,0.4); }
+@media (min-width: 640px) { .daily-btn { font-size: 14px; } }
+.daily-btn:hover { color: #fff; }
+.dot-sep { color: rgba(255,255,255,0.4); }
+.daily-best-time { color: #f0abfc; }
+
+.best-time-pill { margin-top: 28px; display: inline-flex; align-items: center; gap: 8px; border-radius: 9999px; border: 1px solid rgba(251,191,36,0.25); background: rgba(251,191,36,0.05); padding: 8px 16px; animation: fadeIn .5s .8s both; }
+.best-label { font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: rgba(253,230,138,0.8); }
+.best-time-value { font-size: 14px; font-weight: 700; color: #fde68a; }
+.seed-hint { margin-top: 8px; font-size: 10px; letter-spacing: 0.02em; color: rgba(255,255,255,0.25); animation: fadeIn .5s .9s both; }
+
+/* ---------- bottom toggles ---------- */
+.bottom-toggles { position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 0 20px 28px; }
+@media (min-width: 640px) { .bottom-toggles { gap: 16px; padding-bottom: 36px; } }
+.toggle-btn {
+  display: flex; height: 44px; width: 44px; align-items: center; justify-content: center; border-radius: 9999px;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); cursor: pointer;
+  transition: all .12s ease; color: rgba(255,255,255,0.4);
+}
+.toggle-btn[aria-pressed="true"] { color: #67e8f9; border-color: rgba(34,211,238,0.5); }
+.toggle-btn:hover { transform: translateY(-1px); }
+@media (min-width: 640px) { .toggle-btn { height: 48px; width: 48px; } }
+
+/* ---------- settings ---------- */
+.section-heading { font-size: 14px; font-weight: 700; letter-spacing: 0.3em; color: rgba(103,232,249,0.8); }
+.settings-content { position: relative; z-index: 10; max-width: 768px; width: 100%; margin: 0 auto; flex: 1; overflow-y: auto; padding: 16px 20px 40px; }
+.lf-scroll { scrollbar-width: thin; scrollbar-color: rgba(103,232,249,0.4) transparent; }
+.lf-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.lf-scroll::-webkit-scrollbar-thumb { background: rgba(103,232,249,0.35); border-radius: 999px; }
+.lf-scroll::-webkit-scrollbar-track { background: transparent; }
+
+.settings-section { margin-bottom: 28px; }
+.settings-section h3 { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; color: #fff; }
+.settings-section .hint { font-size: 12px; color: rgba(255,255,255,0.45); margin-bottom: 10px; }
+
+.chip-grid-blurb { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (min-width: 640px) { .chip-grid-blurb { grid-template-columns: repeat(4, 1fr); } }
+.chip-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.opt-chip {
+  border-radius: 9999px; padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.7);
+  transition: all .12s ease;
+}
+.opt-chip:hover { transform: translateY(-1px); }
+.opt-chip-blurb { border-radius: 12px; padding: 10px 12px; text-align: left; }
+.opt-chip-blurb .label { display: block; font-size: 14px; font-weight: 600; color: #fff; }
+.opt-chip-blurb .blurb { display: block; margin-top: 2px; font-size: 10px; line-height: 1.2; color: rgba(255,255,255,0.45); }
+
+.skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (min-width: 640px) { .skin-grid { grid-template-columns: repeat(3, 1fr); } }
+.skin-card {
+  display: flex; align-items: center; gap: 12px; border-radius: 12px; padding: 12px; text-align: left; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); transition: all .12s ease; position: relative;
+}
+.skin-card:hover { transform: translateY(-1px); }
+.skin-dot { position: relative; width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.skin-dot-inner { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.9); }
+.skin-name { display: block; font-size: 14px; font-weight: 600; color: #fff; }
+.skin-desc { display: block; font-size: 11px; color: rgba(255,255,255,0.5); }
+.skin-check { margin-left: auto; width: 16px; height: 16px; flex-shrink: 0; }
+
+.custom-color-row { margin-top: 12px; display: flex; align-items: center; gap: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); padding: 12px 16px; }
+.custom-color-row label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.6); }
+.custom-color-row input[type="color"] { width: 48px; height: 32px; border: none; border-radius: 4px; background: transparent; cursor: pointer; padding: 0; }
+.custom-color-hex { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.5); }
+.swatch-row { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.swatch { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; }
+
+.theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (min-width: 640px) { .theme-grid { grid-template-columns: repeat(3, 1fr); } }
+.theme-card { border-radius: 12px; overflow: hidden; text-align: left; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); transition: all .12s ease; }
+.theme-card:hover { transform: translateY(-1px); }
+.theme-strip { display: flex; height: 48px; align-items: flex-end; gap: 4px; padding: 0 8px 4px; }
+.theme-strip-bar { height: 6px; flex: 1; border-radius: 9999px; }
+.theme-name { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: 14px; font-weight: 600; color: #fff; }
+
+.control-row { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); padding: 16px; }
+.control-row .label-line { display: flex; align-items: center; justify-content: space-between; }
+.control-label { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.8); }
+.control-value { font-size: 14px; font-weight: 700; color: #22d3ee; }
+.control-row input[type="range"] { margin-top: 12px; width: 100%; accent-color: #22d3ee; }
+.range-labels { margin-top: 4px; display: flex; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.3); }
+
+.toggle-row { display: flex; width: 100%; align-items: center; justify-content: space-between; border-radius: 12px; padding: 12px 16px; text-align: left; cursor: pointer; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); transition: all .12s ease; }
+.toggle-row .toggle-label { font-size: 14px; font-weight: 600; color: #fff; display: block; }
+.toggle-row .toggle-hint { font-size: 11px; color: rgba(255,255,255,0.45); display: block; }
+.switch { position: relative; width: 44px; height: 24px; border-radius: 9999px; flex-shrink: 0; transition: background .2s, box-shadow .2s; }
+.switch-knob { position: absolute; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .2s; }
+
+/* ---------- overlays ---------- */
+.overlay { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; }
+.overlay-dim { background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.countdown-text { font-size: 28vw; font-weight: 900; line-height: 1; color: #67e8f9; text-shadow: 0 0 6px rgba(103,232,249,0.55), 0 0 18px rgba(34,211,238,0.45), 0 0 38px rgba(34,211,238,0.35); }
+@media (min-width: 640px) { .countdown-text { font-size: 18vw; } }
+.countdown-text.go { color: #6ee7b7; text-shadow: 0 0 18px rgba(52,211,153,0.7), 0 0 50px rgba(52,211,153,0.5); font-size: 22vw; }
+@media (min-width: 640px) { .countdown-text.go { font-size: 14vw; } }
+.cd-enter { animation: cdEnter .35s ease; }
+@keyframes cdEnter { from { opacity: 0; transform: scale(0.4) } to { opacity: 1; transform: scale(1) } }
+
+/* ---------- HUD ---------- */
+.hud { position: absolute; inset: 0; z-index: 20; pointer-events: none; }
+.hud-tl { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px; }
+@media (min-width: 640px) { .hud-tl { left: 20px; top: 20px; } }
+.hud-diff { display: flex; align-items: center; gap: 8px; }
+.hud-diff-name { font-size: 11px; font-weight: 700; letter-spacing: 0.2em; }
+@media (min-width: 640px) { .hud-diff-name { font-size: 12px; } }
+.hud-best { font-size: 10px; font-weight: 500; letter-spacing: 0.02em; color: rgba(255,255,255,0.4); }
+@media (min-width: 640px) { .hud-best { font-size: 11px; } }
+.hud-tc { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); text-align: center; }
+@media (min-width: 640px) { .hud-tc { top: 20px; } }
+.hud-time { font-size: 30px; font-weight: 900; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.25), 0 0 22px rgba(103,232,249,0.25); font-variant-numeric: tabular-nums; }
+@media (min-width: 640px) { .hud-time { font-size: 36px; } }
+.hud-survival { margin-top: 2px; font-size: 9px; font-weight: 500; letter-spacing: 0.3em; color: rgba(255,255,255,0.4); }
+.hud-intensity-track { margin: 6px auto 0; height: 4px; width: 96px; overflow: hidden; border-radius: 9999px; background: rgba(255,255,255,0.1); }
+@media (min-width: 640px) { .hud-intensity-track { width: 128px; } }
+.hud-intensity-fill { height: 100%; border-radius: 9999px; transition: width .15s ease; }
+.hud-pause { position: absolute; right: 12px; top: 12px; width: 40px; height: 40px; padding: 0; pointer-events: auto; justify-content: center; }
+@media (min-width: 640px) { .hud-pause { right: 20px; top: 20px; width: 44px; height: 44px; } }
+
+.flow-meter { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+@media (min-width: 640px) { .flow-meter { left: 20px; } }
+.flow-mult { font-size: 10px; font-weight: 700; letter-spacing: 0.02em; color: #22d3ee; }
+.flow-bar-track { position: relative; width: 10px; height: 112px; overflow: hidden; border-radius: 9999px; background: rgba(255,255,255,0.1); }
+@media (min-width: 640px) { .flow-bar-track { height: 144px; } }
+.flow-bar-fill { position: absolute; bottom: 0; width: 100%; border-radius: 9999px; transition: height .15s ease; }
+.flow-label { font-size: 9px; font-weight: 500; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+
+.powerup-badges { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; }
+@media (min-width: 640px) { .powerup-badges { right: 20px; } }
+.pu-badge { display: flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; font-weight: 900; }
+@media (min-width: 640px) { .pu-badge { width: 40px; height: 40px; } }
+
+.special-label { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); padding: 8px 20px; border-radius: 9999px; font-size: 14px; font-weight: 700; letter-spacing: 0.25em; background: rgba(10,12,28,0.66); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(103,232,249,0.16); animation: cdEnter .25s ease; }
+@media (min-width: 640px) { .special-label { font-size: 16px; } }
+.milestone { position: absolute; left: 50%; top: 38%; transform: translateX(-50%); text-align: center; animation: milestoneIn .4s ease; }
+.milestone .ms-num { font-size: 64px; font-weight: 900; color: #fff; }
+@media (min-width: 640px) { .milestone .ms-num { font-size: 72px; } }
+.milestone .ms-label { font-size: 14px; font-weight: 700; letter-spacing: 0.3em; }
+@keyframes milestoneIn { from { opacity: 0; transform: translate(-50%, 20px) scale(0.5) } to { opacity: 1; transform: translate(-50%, 0) scale(1) } }
+
+/* ---------- joystick ---------- */
+.joystick-zone { position: absolute; inset: 0; z-index: 10; touch-action: none; }
+.joy-base { position: absolute; width: 120px; height: 120px; border-radius: 50%; transform: translate(-50%, -50%); }
+.joy-knob { position: absolute; width: 46px; height: 46px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.6); }
+
+/* ---------- tutorial ---------- */
+.tutorial-hint { position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%); z-index: 20; animation: cdEnter .4s ease; }
+.tutorial-panel { padding: 10px 20px; border-radius: 9999px; background: rgba(10,12,28,0.66); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(103,232,249,0.16); text-align: center; }
+.tutorial-main { font-size: 14px; font-weight: 700; letter-spacing: 0.02em; color: rgba(255,255,255,0.9); }
+.tutorial-sub { margin-top: 2px; font-size: 11px; color: rgba(255,255,255,0.5); }
+
+/* ---------- modal ---------- */
+.modal-panel { margin: 16px; width: 100%; max-width: 448px; border-radius: 24px; padding: 24px; text-align: center; background: rgba(10,12,28,0.66); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(103,232,249,0.16); }
+@media (min-width: 640px) { .modal-panel { padding: 32px; } }
+.modal-title { font-size: 24px; font-weight: 900; letter-spacing: 0.15em; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.25), 0 0 22px rgba(103,232,249,0.25); }
+.modal-sub { margin-top: 4px; font-size: 12px; color: rgba(255,255,255,0.45); }
+
+.btn-primary { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; padding: 14px 24px; font-size: 16px; font-weight: 700; letter-spacing: 0.02em; color: #020617; border: none; cursor: pointer; background: linear-gradient(90deg, #22d3ee, #38bdf8); transition: transform .12s ease; }
+.btn-primary:hover { transform: scale(1.02); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-secondary { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; padding: 12px 24px; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.85); cursor: pointer; }
+.btn-secondary.dim { color: rgba(255,255,255,0.7); }
+.modal-panel .btn-primary { margin-top: 24px; }
+.modal-panel .btn-secondary { margin-top: 10px; }
+
+/* ---------- game over ---------- */
+.gameover-panel { max-width: 448px; }
+.result-label { font-size: 10px; font-weight: 500; letter-spacing: 0.3em; color: rgba(255,255,255,0.4); }
+.result-time { font-size: 48px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+@media (min-width: 640px) { .result-time { font-size: 60px; } }
+.newbest-badge { margin: 12px auto 0; display: inline-flex; align-items: center; gap: 6px; border-radius: 9999px; border: 1px solid rgba(251,191,36,0.4); background: rgba(251,191,36,0.1); padding: 4px 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.02em; color: #fde68a; }
+.go-msg { margin-top: 12px; font-size: 16px; font-weight: 600; color: rgba(255,255,255,0.9); }
+.go-stats { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat-card { border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); padding: 8px 12px; text-align: left; }
+.stat-card .stat-icon { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500; letter-spacing: 0.02em; color: rgba(255,255,255,0.4); }
+.stat-card .stat-val { margin-top: 2px; font-size: 16px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+.go-achievements { margin-top: 12px; border-radius: 12px; border: 1px solid rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); padding: 10px; }
+.go-achievements .ach-title { margin-bottom: 4px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(253,230,138,0.8); }
+.ach-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.ach-chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 9999px; background: rgba(255,255,255,0.1); padding: 2px 8px; font-size: 11px; font-weight: 500; color: #fff; }
+
+.go-actions { margin-top: 20px; }
+.go-actions .btn-primary { margin-top: 0; }
+.go-actions .btn-secondary { margin-top: 10px; }
+.go-actions-row { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.go-actions-row .btn-secondary { margin-top: 0; }
+.go-tip { margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 10px; letter-spacing: 0.02em; color: rgba(255,255,255,0.3); }
+
+/* daily panel */
+.daily-panel { margin-top: 12px; border-radius: 12px; border: 1px solid rgba(217,70,239,0.25); background: rgba(217,70,239,0.05); padding: 12px; text-align: left; }
+.daily-panel-head { margin-bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: rgba(250,232,255,0.8); }
+.daily-input-row { margin-bottom: 10px; display: flex; gap: 6px; }
+.daily-input { min-width: 0; flex: 1; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); padding: 6px 10px; font-size: 12px; color: #fff; }
+.daily-input::placeholder { color: rgba(255,255,255,0.3); }
+.daily-input:focus { outline: none; border-color: rgba(217,70,239,0.6); }
+.daily-submit { flex-shrink: 0; display: flex; align-items: center; gap: 4px; border-radius: 8px; background: rgba(217,70,239,0.8); padding: 6px 12px; font-size: 12px; font-weight: 700; color: #fff; border: none; cursor: pointer; }
+.daily-submit:hover { background: rgb(217,70,239); }
+.daily-msg { margin-bottom: 8px; border-radius: 8px; padding: 4px 10px; font-size: 11px; font-weight: 500; }
+.daily-msg.ok { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+.daily-meta { margin-bottom: 6px; padding: 0 4px; display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: rgba(255,255,255,0.4); }
+.daily-list { max-height: 144px; overflow-y: auto; }
+.daily-list-item { display: flex; align-items: center; gap: 8px; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
+.daily-list-item .rank { width: 16px; text-align: center; font-weight: 700; color: rgba(255,255,255,0.5); }
+.daily-list-item .nm { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; color: rgba(255,255,255,0.85); }
+.daily-list-item .tm { font-weight: 700; color: #f0abfc; font-variant-numeric: tabular-nums; }
+
+.watermark { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10; font-size: 9px; font-weight: 500; letter-spacing: 0.35em; color: rgba(255,255,255,0.2); pointer-events: none; }
+
+.loading { position: absolute; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; background: var(--bg); font-size: 14px; font-weight: 700; letter-spacing: 0.4em; color: rgba(103,232,249,0.7); text-shadow: 0 0 8px rgba(255,255,255,0.25), 0 0 22px rgba(103,232,249,0.25); transition: opacity .3s; }
+.loading.hide { opacity: 0; pointer-events: none; }
+
+.lf-noselect { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <!-- Menu background canvas (home/settings) -->
+    <canvas id="bg-canvas" class="bg-canvas" aria-hidden="true"></canvas>
+
+    <!-- Game canvas (countdown/playing/paused/gameover) -->
+    <canvas id="game-canvas" class="game-canvas hidden" aria-hidden="true"></canvas>
+
+    <!-- ============ HOME SCREEN ============ -->
+    <div id="screen-home" class="screen screen-home">
+      <header class="top-bar">
+        <div class="brand">
+          <span id="home-diff-dot" class="diff-dot"></span>
+          <span class="brand-text">LASER&nbsp;FLOW</span>
+        </div>
+        <button id="btn-customize" class="chip-btn" aria-label="Customize">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>
+          <span class="hide-sm">Customize</span>
+        </button>
+      </header>
+
+      <main class="home-center">
+        <h1 class="title lf-title-gradient">LASER FLOW</h1>
+        <p class="hook">STAY MOVING. STAY ALIVE.</p>
+
+        <div id="home-difficulty-chips" class="difficulty-chips"></div>
+
+        <div class="start-wrap">
+          <button id="btn-start" class="start-btn lf-start-glow">
+            <svg class="icon icon-lg" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            START
+          </button>
+          <button id="btn-daily" class="daily-btn chip-btn">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            DAILY CHALLENGE
+            <span class="dot-sep">·</span>
+            <span id="home-daily-best" class="daily-best-time">00:00.00</span>
+          </button>
+        </div>
+
+        <div class="best-time-pill">
+          <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+          <span class="best-label">BEST · <span id="home-best-diff">Normal</span></span>
+          <span id="home-best-time" class="best-time-value">00:00.00</span>
+        </div>
+        <p class="seed-hint">Daily seed <span id="home-seed">—</span> · same arena for everyone today</p>
+      </main>
+
+      <footer class="bottom-toggles">
+        <button id="btn-sound" class="toggle-btn" aria-label="Sound" aria-pressed="true"></button>
+        <button id="btn-music" class="toggle-btn" aria-label="Music" aria-pressed="true"></button>
+        <button id="btn-vibration" class="toggle-btn" aria-label="Vibration" aria-pressed="true"></button>
+      </footer>
+    </div>
+
+    <!-- ============ SETTINGS SCREEN ============ -->
+    <div id="screen-settings" class="screen screen-settings hidden">
+      <header class="top-bar">
+        <button id="btn-settings-back" class="chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          Back
+        </button>
+        <h2 class="section-heading">CUSTOMIZE</h2>
+        <span class="spacer-w16"></span>
+      </header>
+      <main id="settings-content" class="settings-content lf-scroll"></main>
+    </div>
+
+    <!-- ============ COUNTDOWN ============ -->
+    <div id="screen-countdown" class="overlay hidden">
+      <div id="countdown-text" class="countdown-text"></div>
+    </div>
+
+    <!-- ============ HUD (playing) ============ -->
+    <div id="hud" class="hud hidden">
+      <div class="hud-tl">
+        <div class="hud-diff">
+          <span id="hud-diff-dot" class="diff-dot"></span>
+          <span id="hud-diff-name" class="hud-diff-name"></span>
+        </div>
+        <div id="hud-best" class="hud-best">BEST 00:00.00</div>
+      </div>
+      <div class="hud-tc">
+        <div id="hud-time" class="hud-time">00:00.00</div>
+        <div class="hud-survival">SURVIVAL</div>
+        <div class="hud-intensity-track"><div id="hud-intensity" class="hud-intensity-fill"></div></div>
+      </div>
+      <button id="btn-pause" class="hud-pause chip-btn" aria-label="Pause">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+      <!-- Flow meter (left) -->
+      <div class="flow-meter">
+        <span id="flow-mult" class="flow-mult">×1</span>
+        <div class="flow-bar-track"><div id="flow-bar" class="flow-bar-fill"></div></div>
+        <span class="flow-label">FLOW</span>
+      </div>
+      <!-- Power-up badges (right) -->
+      <div id="powerup-badges" class="powerup-badges"></div>
+      <!-- Special event label -->
+      <div id="special-label" class="special-label hidden"></div>
+      <!-- Milestone callout -->
+      <div id="milestone" class="milestone hidden"></div>
+    </div>
+
+    <!-- ============ JOYSTICK ============ -->
+    <div id="joystick-zone" class="joystick-zone hidden"></div>
+
+    <!-- ============ TUTORIAL HINT ============ -->
+    <div id="tutorial-hint" class="tutorial-hint hidden">
+      <div class="tutorial-panel">
+        <div id="tutorial-main" class="tutorial-main"></div>
+        <div class="tutorial-sub">Graze lasers to charge Flow · grab power-ups · keep moving!</div>
+      </div>
+    </div>
+
+    <!-- ============ PAUSE ============ -->
+    <div id="screen-pause" class="overlay overlay-dim hidden">
+      <div class="modal-panel">
+        <h2 class="modal-title">PAUSED</h2>
+        <p class="modal-sub">Take a breath. Lasers wait.</p>
+        <button id="btn-resume" class="btn-primary lf-start-glow">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          RESUME
+        </button>
+        <button id="btn-pause-settings" class="btn-secondary chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>
+          Change Settings
+        </button>
+        <button id="btn-pause-home" class="btn-secondary chip-btn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          Return Home
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ GAME OVER ============ -->
+    <div id="screen-gameover" class="overlay overlay-dim lf-scroll hidden">
+      <div id="gameover-panel" class="modal-panel gameover-panel">
+        <div class="result-label" id="go-label">SURVIVAL TIME</div>
+        <div id="go-time" class="result-time">00:00.00</div>
+        <div id="go-newbest" class="newbest-badge hidden">NEW BEST</div>
+        <p id="go-msg" class="go-msg"></p>
+        <div id="go-stats" class="go-stats"></div>
+        <div id="go-achievements" class="go-achievements hidden"></div>
+        <div id="go-daily-panel" class="hidden"></div>
+        <div class="go-actions">
+          <button id="btn-replay" class="btn-primary lf-start-glow">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            REPLAY
+          </button>
+          <button id="btn-save-clip" class="btn-secondary chip-btn hidden">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span id="save-clip-label">Save Clip</span>
+          </button>
+          <div class="go-actions-row">
+            <button id="btn-go-settings" class="btn-secondary chip-btn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>
+              Settings
+            </button>
+            <button id="btn-go-home" class="btn-secondary chip-btn">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Home
+            </button>
+          </div>
+        </div>
+        <div class="go-tip"><svg class="icon-xs" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Tip: keep moving — standing still is a death sentence</div>
+      </div>
+    </div>
+
+    <!-- brand watermark during play -->
+    <div id="watermark" class="watermark hidden">LASER FLOW</div>
+
+    <!-- loading splash (before JS init) -->
+    <div id="loading" class="loading">LASER FLOW</div>
+  </div>
+
+  <script>
+// Laser Flow — configuration (difficulties, themes, skins, power-ups, achievements)
+(function (global) {
+  'use strict'
+
+  var DEFAULT_SETTINGS = {
+    difficulty: 'normal',
+    arenaSize: 'medium',
+    laserSpeed: 'normal',
+    theme: 'neon-grid',
+    skin: 'cyan',
+    customColor: '#22d3ee',
+    sound: true,
+    music: true,
+    vibration: true,
+    reduceFlash: false,
+    reducedMotion: false,
+    joystickSensitivity: 1.0,
+  }
+
+  var DIFFICULTIES = {
+    easy: {
+      id: 'easy', name: 'Easy', blurb: 'Relaxed pace. Learn the flow.',
+      spawnRateMult: 0.62, warnTimeMult: 1.45, activeTimeMult: 0.85,
+      rampMult: 0.55, specialChance: 0.12, maxConcurrentMult: 0.7, color: '#34d399',
+    },
+    normal: {
+      id: 'normal', name: 'Normal', blurb: 'Balanced challenge. Stay sharp.',
+      spawnRateMult: 1.0, warnTimeMult: 1.0, activeTimeMult: 1.0,
+      rampMult: 1.0, specialChance: 0.18, maxConcurrentMult: 1.0, color: '#22d3ee',
+    },
+    hard: {
+      id: 'hard', name: 'Hard', blurb: 'Tight windows. Constant pressure.',
+      spawnRateMult: 1.35, warnTimeMult: 0.78, activeTimeMult: 1.15,
+      rampMult: 1.35, specialChance: 0.24, maxConcurrentMult: 1.25, color: '#f59e0b',
+    },
+    insane: {
+      id: 'insane', name: 'Insane', blurb: 'Pure chaos. For the fearless.',
+      spawnRateMult: 1.7, warnTimeMult: 0.62, activeTimeMult: 1.3,
+      rampMult: 1.7, specialChance: 0.32, maxConcurrentMult: 1.5, color: '#f43f5e',
+    },
+  }
+
+  var ARENA_SIZES = {
+    small: { id: 'small', name: 'Small', scale: 0.62, playerSpeedMult: 0.9 },
+    medium: { id: 'medium', name: 'Medium', scale: 0.78, playerSpeedMult: 1.0 },
+    large: { id: 'large', name: 'Large', scale: 0.92, playerSpeedMult: 1.12 },
+  }
+
+  var LASER_SPEEDS = {
+    slow: { id: 'slow', name: 'Slow', rotSpeedMult: 0.7, wallSpeedMult: 0.7 },
+    normal: { id: 'normal', name: 'Normal', rotSpeedMult: 1.0, wallSpeedMult: 1.0 },
+    fast: { id: 'fast', name: 'Fast', rotSpeedMult: 1.35, wallSpeedMult: 1.35 },
+  }
+
+  var THEMES = {
+    'neon-grid': {
+      id: 'neon-grid', name: 'Neon Grid',
+      bgTop: '#0a0a1f', bgBottom: '#050510',
+      grid: 'rgba(56, 189, 248, 0.10)', gridGlow: 'rgba(56, 189, 248, 0.25)',
+      lasers: ['#22d3ee', '#38bdf8', '#06b6d4', '#67e8f9'], laserWarn: '#fbbf24',
+      player: '#22d3ee', particle: '#67e8f9', accent: '#22d3ee', vignette: 'rgba(0,0,0,0.55)',
+    },
+    'cyber-lab': {
+      id: 'cyber-lab', name: 'Cyber Lab',
+      bgTop: '#04140c', bgBottom: '#020805',
+      grid: 'rgba(52, 211, 153, 0.10)', gridGlow: 'rgba(52, 211, 153, 0.25)',
+      lasers: ['#34d399', '#10b981', '#6ee7b7', '#a7f3d0'], laserWarn: '#fde047',
+      player: '#34d399', particle: '#6ee7b7', accent: '#34d399', vignette: 'rgba(0,0,0,0.55)',
+    },
+    void: {
+      id: 'void', name: 'Void',
+      bgTop: '#12041a', bgBottom: '#060108',
+      grid: 'rgba(168, 85, 247, 0.10)', gridGlow: 'rgba(168, 85, 247, 0.25)',
+      lasers: ['#a855f7', '#d946ef', '#c084fc', '#e9d5ff'], laserWarn: '#fb7185',
+      player: '#d946ef', particle: '#c084fc', accent: '#a855f7', vignette: 'rgba(0,0,0,0.6)',
+    },
+    'ice-core': {
+      id: 'ice-core', name: 'Ice Core',
+      bgTop: '#06121f', bgBottom: '#02060c',
+      grid: 'rgba(125, 211, 252, 0.10)', gridGlow: 'rgba(125, 211, 252, 0.25)',
+      lasers: ['#7dd3fc', '#bae6fd', '#e0f2fe', '#38bdf8'], laserWarn: '#fcd34d',
+      player: '#7dd3fc', particle: '#e0f2fe', accent: '#7dd3fc', vignette: 'rgba(0,0,0,0.5)',
+    },
+    'lava-core': {
+      id: 'lava-core', name: 'Lava Core',
+      bgTop: '#1a0604', bgBottom: '#0a0201',
+      grid: 'rgba(251, 146, 60, 0.10)', gridGlow: 'rgba(251, 146, 60, 0.25)',
+      lasers: ['#fb923c', '#f97316', '#fbbf24', '#fca5a5'], laserWarn: '#fef08a',
+      player: '#fb923c', particle: '#fbbf24', accent: '#fb923c', vignette: 'rgba(0,0,0,0.6)',
+    },
+  }
+
+  var SKINS = {
+    cyan: { id: 'cyan', name: 'Cyan Pulse', color: '#22d3ee', glow: '#67e8f9', effect: 'aura', description: 'Soft cyan aura' },
+    magenta: { id: 'magenta', name: 'Magenta Spark', color: '#f472b6', glow: '#fbcfe8', effect: 'spark', description: 'Crackling sparks' },
+    lime: { id: 'lime', name: 'Lime Trail', color: '#a3e635', glow: '#d9f99d', effect: 'trail', description: 'Glowing trail' },
+    gold: { id: 'gold', name: 'Gold Orbit', color: '#fbbf24', glow: '#fde68a', effect: 'orbit', description: 'Orbiting ring' },
+    white: { id: 'white', name: 'Phantom White', color: '#f8fafc', glow: '#e2e8f0', effect: 'pulse', description: 'Pulsing core' },
+    violet: { id: 'violet', name: 'Violet Flux', color: '#a78bfa', glow: '#ddd6fe', effect: 'aura', description: 'Violet aura' },
+    crimson: { id: 'crimson', name: 'Crimson Edge', color: '#fb7185', glow: '#fecdd3', effect: 'trail', description: 'Crimson trail' },
+    orange: { id: 'orange', name: 'Solar Flare', color: '#fb923c', glow: '#fed7aa', effect: 'spark', description: 'Crackling sparks' },
+    teal: { id: 'teal', name: 'Teal Drift', color: '#2dd4bf', glow: '#99f6e4', effect: 'aura', description: 'Teal aura' },
+    rose: { id: 'rose', name: 'Rose Pulse', color: '#f43f5e', glow: '#fda4af', effect: 'pulse', description: 'Pulsing core' },
+    emerald: { id: 'emerald', name: 'Emerald Orbit', color: '#10b981', glow: '#6ee7b7', effect: 'orbit', description: 'Orbiting ring' },
+    sky: { id: 'sky', name: 'Sky Trail', color: '#38bdf8', glow: '#bae6fd', effect: 'trail', description: 'Sky-blue trail' },
+    custom: { id: 'custom', name: 'Custom', color: '#22d3ee', glow: '#67e8f9', effect: 'aura', description: 'Pick your own color' },
+  }
+
+  var SKIN_LIST = Object.keys(SKINS).map(function (k) { return SKINS[k] })
+  var THEME_LIST = Object.keys(THEMES).map(function (k) { return THEMES[k] })
+
+  var POWER_UP_META = {
+    shield: { name: 'Shield', color: '#34d399', duration: 0 },
+    slowmo: { name: 'Slow-Mo', color: '#a855f7', duration: 3000 },
+    phase: { name: 'Phase Dash', color: '#fbbf24', duration: 2000 },
+    multiplier: { name: '2× Flow', color: '#f472b6', duration: 6000 },
+  }
+
+  var ACHIEVEMENTS = [
+    { id: 'first_run', name: 'First Steps', description: 'Survive your first run', icon: '👋', check: function (s) { return s.time > 0 } },
+    { id: 'survive_15', name: 'Survivor', description: 'Survive 15 seconds', icon: '⏱️', check: function (s) { return s.time >= 15 } },
+    { id: 'survive_30', name: 'In The Zone', description: 'Survive 30 seconds', icon: '🔥', check: function (s) { return s.time >= 30 } },
+    { id: 'survive_60', name: 'Untouchable', description: 'Survive 60 seconds', icon: '💎', check: function (s) { return s.time >= 60 } },
+    { id: 'survive_90', name: 'Flow Master', description: 'Survive 90 seconds', icon: '👑', check: function (s) { return s.time >= 90 } },
+    { id: 'flow_50', name: 'Graze King', description: 'Reach 50% Flow meter', icon: '✨', check: function (s) { return s.flowMax >= 50 } },
+    { id: 'flow_100', name: 'Max Flow', description: 'Fill the Flow meter completely', icon: '🌟', check: function (s) { return s.flowMax >= 95 } },
+    { id: 'near_50', name: 'Close Calls', description: 'Dodge 50 near-misses in one run', icon: '⚡', check: function (s) { return s.nearMisses >= 50 } },
+    { id: 'power_5', name: 'Collector', description: 'Grab 5 power-ups in one run', icon: '🛡️', check: function (s) { return s.powerUpsUsed >= 5 } },
+    { id: 'specials_5', name: 'Event Horizon', description: 'Clear 5 special events in one run', icon: '🌀', check: function (s) { return s.specialsCleared >= 5 } },
+    { id: 'insane_30', name: 'Fearless', description: 'Survive 30s on Insane', icon: '💀', check: function (s, settings) { return settings.difficulty === 'insane' && s.time >= 30 } },
+  ]
+
+  function formatTime(seconds) {
+    if (!isFinite(seconds) || seconds < 0) seconds = 0
+    var m = Math.floor(seconds / 60)
+    var s = Math.floor(seconds % 60)
+    var cs = Math.floor((seconds * 100) % 100)
+    return pad(m) + ':' + pad(s) + '.' + pad(cs)
+  }
+  function pad(n) { return n < 10 ? '0' + n : '' + n }
+
+  function getTodaySeed() {
+    return new Date().toISOString().slice(0, 10)
+  }
+
+  global.LF = global.LF || {}
+  global.LF.Config = {
+    DEFAULT_SETTINGS: DEFAULT_SETTINGS,
+    DIFFICULTIES: DIFFICULTIES,
+    ARENA_SIZES: ARENA_SIZES,
+    LASER_SPEEDS: LASER_SPEEDS,
+    THEMES: THEMES,
+    SKINS: SKINS,
+    SKIN_LIST: SKIN_LIST,
+    THEME_LIST: THEME_LIST,
+    POWER_UP_META: POWER_UP_META,
+    ACHIEVEMENTS: ACHIEVEMENTS,
+    formatTime: formatTime,
+    getTodaySeed: getTodaySeed,
+  }
+})(window)
+
+  </script>
+  <script>
+// Laser Flow — localStorage persistence (settings, best times, achievements, daily history)
+(function (global) {
+  'use strict'
+  var C = global.LF.Config
+  var SETTINGS_KEY = 'laserflow.settings.v1'
+  var BEST_KEY = 'laserflow.best.v1'
+  var ACH_KEY = 'laserflow.achievements.v1'
+  var FIRST_RUN_KEY = 'laserflow.firstrun.v1'
+  var DAILY_NAME_KEY = 'laserflow.dailyname.v1'
+  var DAILY_BEST_PREFIX = 'laserflow.dailybest.v1.'
+  var DAILY_HISTORY_PREFIX = 'laserflow.dailyhistory.v1.'
+
+  var EMPTY_BEST = { easy: 0, normal: 0, hard: 0, insane: 0 }
+
+  function loadSettings() {
+    try {
+      var raw = localStorage.getItem(SETTINGS_KEY)
+      if (!raw) return Object.assign({}, C.DEFAULT_SETTINGS)
+      return Object.assign({}, C.DEFAULT_SETTINGS, JSON.parse(raw))
+    } catch (e) { return Object.assign({}, C.DEFAULT_SETTINGS) }
+  }
+  function saveSettings(settings) {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)) } catch (e) {}
+  }
+  function loadBestTimes() {
+    try {
+      var raw = localStorage.getItem(BEST_KEY)
+      if (!raw) return Object.assign({}, EMPTY_BEST)
+      return Object.assign({}, EMPTY_BEST, JSON.parse(raw))
+    } catch (e) { return Object.assign({}, EMPTY_BEST) }
+  }
+  function saveBestTimes(times) {
+    try { localStorage.setItem(BEST_KEY, JSON.stringify(times)) } catch (e) {}
+  }
+  function recordBest(difficulty, time) {
+    var times = loadBestTimes()
+    var prev = times[difficulty] || 0
+    if (time > prev) {
+      times[difficulty] = time
+      saveBestTimes(times)
+      return { times: times, isNewBest: true }
+    }
+    return { times: times, isNewBest: false }
+  }
+  function getBest(difficulty) { return loadBestTimes()[difficulty] || 0 }
+
+  function loadUnlockedAchievements() {
+    try {
+      var raw = localStorage.getItem(ACH_KEY)
+      if (!raw) return {}
+      var arr = JSON.parse(raw)
+      var set = {}
+      for (var i = 0; i < arr.length; i++) set[arr[i]] = true
+      return set
+    } catch (e) { return {} }
+  }
+  function saveUnlockedAchievements(set) {
+    try {
+      var arr = []
+      for (var k in set) if (set[k]) arr.push(k)
+      localStorage.setItem(ACH_KEY, JSON.stringify(arr))
+    } catch (e) {}
+  }
+
+  function isFirstRun() {
+    try { return localStorage.getItem(FIRST_RUN_KEY) === null } catch (e) { return false }
+  }
+  function markFirstRunDone() {
+    try { localStorage.setItem(FIRST_RUN_KEY, '1') } catch (e) {}
+  }
+
+  function loadDailyName() {
+    try { return localStorage.getItem(DAILY_NAME_KEY) || 'Player' } catch (e) { return 'Player' }
+  }
+  function saveDailyName(name) {
+    try { localStorage.setItem(DAILY_NAME_KEY, name.slice(0, 16)) } catch (e) {}
+  }
+
+  function loadDailyBestLocal(seed, difficulty) {
+    try {
+      var raw = localStorage.getItem(DAILY_BEST_PREFIX + seed + '.' + difficulty)
+      return raw ? parseFloat(raw) || 0 : 0
+    } catch (e) { return 0 }
+  }
+  function saveDailyBestLocal(seed, difficulty, time) {
+    var prev = loadDailyBestLocal(seed, difficulty)
+    if (time > prev) {
+      try { localStorage.setItem(DAILY_BEST_PREFIX + seed + '.' + difficulty, String(time)) } catch (e) {}
+      return { isNewBest: true }
+    }
+    return { isNewBest: false }
+  }
+
+  function loadDailyHistory(seed, difficulty) {
+    try {
+      var raw = localStorage.getItem(DAILY_HISTORY_PREFIX + seed + '.' + difficulty)
+      if (!raw) return []
+      var arr = JSON.parse(raw)
+      return Array.isArray(arr) ? arr : []
+    } catch (e) { return [] }
+  }
+  function saveDailyHistoryEntry(seed, difficulty, name, time) {
+    var list = loadDailyHistory(seed, difficulty)
+    var entry = {
+      id: Date.now(),
+      name: (name.slice(0, 16) || 'Player'),
+      difficulty: difficulty, time: time, seed: seed,
+      createdAt: new Date().toISOString(),
+    }
+    list.push(entry)
+    list.sort(function (a, b) { return b.time - a.time })
+    var top = list.slice(0, 20)
+    try { localStorage.setItem(DAILY_HISTORY_PREFIX + seed + '.' + difficulty, JSON.stringify(top)) } catch (e) {}
+    return top
+  }
+
+  global.LF.Storage = {
+    loadSettings: loadSettings, saveSettings: saveSettings,
+    loadBestTimes: loadBestTimes, saveBestTimes: saveBestTimes,
+    recordBest: recordBest, getBest: getBest,
+    loadUnlockedAchievements: loadUnlockedAchievements, saveUnlockedAchievements: saveUnlockedAchievements,
+    isFirstRun: isFirstRun, markFirstRunDone: markFirstRunDone,
+    loadDailyName: loadDailyName, saveDailyName: saveDailyName,
+    loadDailyBestLocal: loadDailyBestLocal, saveDailyBestLocal: saveDailyBestLocal,
+    loadDailyHistory: loadDailyHistory, saveDailyHistoryEntry: saveDailyHistoryEntry,
+  }
+})(window)
+
+  </script>
+  <script>
+// Laser Flow — procedural Web Audio engine (music + SFX, no audio files)
+(function (global) {
+  'use strict'
+
+  function AudioEngine() {
+    this.ctx = null
+    this.master = null
+    this.musicGain = null
+    this.sfxGain = null
+    this.musicFilter = null
+    this.delay = null
+    this.feedback = null
+    this.wet = null
+    this.musicTimer = null
+    this.nextNoteTime = 0
+    this.step = 0
+    this.intensity = 0
+    this.targetIntensity = 0
+    this.musicOn = true
+    this.sfxOn = true
+    this.started = false
+    this.droneOscs = []
+    this.streamDest = null
+  }
+
+  AudioEngine.prototype.init = function () {
+    if (this.ctx) return
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext
+      this.ctx = new Ctx()
+      this.master = this.ctx.createGain()
+      this.master.gain.value = 0.9
+      this.master.connect(this.ctx.destination)
+
+      this.sfxGain = this.ctx.createGain()
+      this.sfxGain.gain.value = this.sfxOn ? 0.9 : 0
+      this.sfxGain.connect(this.master)
+
+      this.musicGain = this.ctx.createGain()
+      this.musicGain.gain.value = 0.0
+      this.musicFilter = this.ctx.createBiquadFilter()
+      this.musicFilter.type = 'lowpass'
+      this.musicFilter.frequency.value = 600
+      this.musicFilter.Q.value = 6
+      this.musicGain.connect(this.musicFilter)
+      this.musicFilter.connect(this.master)
+
+      this.delay = this.ctx.createDelay(1.0)
+      this.delay.delayTime.value = 0.34
+      this.feedback = this.ctx.createGain()
+      this.feedback.gain.value = 0.34
+      this.wet = this.ctx.createGain()
+      this.wet.gain.value = 0.32
+      this.musicFilter.connect(this.delay)
+      this.delay.connect(this.feedback)
+      this.feedback.connect(this.delay)
+      this.delay.connect(this.wet)
+      this.wet.connect(this.master)
+    } catch (e) { this.ctx = null }
+  }
+
+  AudioEngine.prototype.resume = function () {
+    this.init()
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume()
+  }
+
+  AudioEngine.prototype.getStream = function () {
+    this.init()
+    if (!this.ctx || !this.master) return null
+    if (!this.streamDest) {
+      this.streamDest = this.ctx.createMediaStreamDestination()
+      this.master.connect(this.streamDest)
+    }
+    return this.streamDest.stream
+  }
+
+  AudioEngine.prototype.setMusicEnabled = function (on) {
+    this.musicOn = on
+    if (!this.ctx || !this.musicGain) return
+    var t = this.ctx.currentTime
+    this.musicGain.gain.cancelScheduledValues(t)
+    this.musicGain.gain.setTargetAtTime(on && this.started ? 0.5 : 0, t, 0.15)
+  }
+
+  AudioEngine.prototype.setSfxEnabled = function (on) {
+    this.sfxOn = on
+    if (!this.ctx || !this.sfxGain) return
+    this.sfxGain.gain.setTargetAtTime(on ? 0.9 : 0, this.ctx.currentTime, 0.05)
+  }
+
+  AudioEngine.prototype.setIntensity = function (v) {
+    this.targetIntensity = Math.max(0, Math.min(1, v))
+  }
+
+  AudioEngine.prototype.startMusic = function () {
+    this.init()
+    if (!this.ctx || !this.musicGain) return
+    this.resume()
+    this.started = true
+    var t = this.ctx.currentTime
+    this.musicGain.gain.cancelScheduledValues(t)
+    this.musicGain.gain.setTargetAtTime(this.musicOn ? 0.5 : 0, t, 1.2)
+    this.startDrone()
+    if (this.musicTimer == null) {
+      this.nextNoteTime = this.ctx.currentTime + 0.1
+      this.step = 0
+      var self = this
+      this.musicTimer = setInterval(function () { self.scheduler() }, 25)
+    }
+  }
+
+  AudioEngine.prototype.stopMusic = function () {
+    this.started = false
+    if (this.musicTimer != null) { clearInterval(this.musicTimer); this.musicTimer = null }
+    this.stopDrone()
+    if (this.ctx && this.musicGain) {
+      var t = this.ctx.currentTime
+      this.musicGain.gain.cancelScheduledValues(t)
+      this.musicGain.gain.setTargetAtTime(0, t, 0.4)
+    }
+  }
+
+  AudioEngine.prototype.startDrone = function () {
+    if (!this.ctx || !this.musicGain || this.droneOscs.length) return
+    var base = 55
+    var ratios = [1, 1.5, 2.0]
+    for (var i = 0; i < ratios.length; i++) {
+      var o = this.ctx.createOscillator()
+      o.type = 'sine'
+      o.frequency.value = base * ratios[i]
+      var g = this.ctx.createGain()
+      g.gain.value = ratios[i] === 1 ? 0.12 : 0.05
+      o.connect(g); g.connect(this.musicGain); o.start()
+      this.droneOscs.push({ o: o, g: g })
+    }
+  }
+
+  AudioEngine.prototype.stopDrone = function () {
+    if (!this.ctx) return
+    var t = this.ctx.currentTime
+    for (var i = 0; i < this.droneOscs.length; i++) {
+      try {
+        this.droneOscs[i].g.gain.setTargetAtTime(0, t, 0.3)
+        this.droneOscs[i].o.stop(t + 0.8)
+      } catch (e) {}
+    }
+    this.droneOscs = []
+  }
+
+  AudioEngine.prototype.scheduler = function () {
+    if (!this.ctx) return
+    this.intensity += (this.targetIntensity - this.intensity) * 0.05
+    if (this.musicFilter) {
+      var cutoff = 500 + this.intensity * 4500
+      this.musicFilter.frequency.setTargetAtTime(cutoff, this.ctx.currentTime, 0.2)
+    }
+    var tempo = 100 + this.intensity * 60
+    var stepDur = 60 / tempo / 4
+    while (this.nextNoteTime < this.ctx.currentTime + 0.12) {
+      this.scheduleStep(this.step, this.nextNoteTime)
+      this.nextNoteTime += stepDur
+      this.step = (this.step + 1) % 32
+    }
+  }
+
+  AudioEngine.prototype.scheduleStep = function (step, time) {
+    if (!this.ctx || !this.musicGain) return
+    var I = this.intensity
+    var scale = [220, 261.63, 293.66, 329.63, 392, 440, 523.25]
+    if (step % 8 === 0) this.note(110, time, 0.22, 'triangle', 0.18 + I * 0.12, this.musicGain)
+    if (step % 4 === 0 && I > 0.25) this.kick(time, 0.18 + I * 0.2)
+    if (step % 2 === 1 && I > 0.45) this.hat(time, 0.04 + I * 0.05)
+    var arpChance = 0.25 + I * 0.6
+    if (Math.random() < arpChance) {
+      var n = scale[(step + Math.floor(Math.random() * 3)) % scale.length]
+      var oct = Math.random() < 0.3 ? 2 : 1
+      this.note(n * oct, time, 0.14, 'sawtooth', 0.05 + I * 0.08, this.musicGain)
+    }
+    if (step % 16 === 0 && I > 0.6) this.note(659.25, time, 0.9, 'sine', 0.06, this.musicGain)
+  }
+
+  AudioEngine.prototype.note = function (freq, time, dur, type, vol, dest) {
+    if (!this.ctx) return
+    var o = this.ctx.createOscillator()
+    o.type = type; o.frequency.value = freq
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(0, time)
+    g.gain.linearRampToValueAtTime(vol, time + 0.01)
+    g.gain.exponentialRampToValueAtTime(0.0001, time + dur)
+    o.connect(g); g.connect(dest)
+    o.start(time); o.stop(time + dur + 0.05)
+  }
+
+  AudioEngine.prototype.kick = function (time, vol) {
+    if (!this.ctx || !this.musicGain) return
+    var o = this.ctx.createOscillator()
+    o.type = 'sine'
+    o.frequency.setValueAtTime(120, time)
+    o.frequency.exponentialRampToValueAtTime(40, time + 0.12)
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(vol, time)
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.18)
+    o.connect(g); g.connect(this.musicGain)
+    o.start(time); o.stop(time + 0.2)
+  }
+
+  AudioEngine.prototype.hat = function (time, vol) {
+    if (!this.ctx || !this.musicGain) return
+    var bufferSize = 0.05 * this.ctx.sampleRate
+    var buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+    var data = buffer.getChannelData(0)
+    for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
+    var src = this.ctx.createBufferSource()
+    src.buffer = buffer
+    var hp = this.ctx.createBiquadFilter()
+    hp.type = 'highpass'; hp.frequency.value = 7000
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(vol, time)
+    g.gain.exponentialRampToValueAtTime(0.0001, time + 0.05)
+    src.connect(hp); hp.connect(g); g.connect(this.musicGain)
+    src.start(time); src.stop(time + 0.06)
+  }
+
+  AudioEngine.prototype.sfx = function (name) {
+    if (!this.sfxOn) return
+    this.init()
+    if (!this.ctx || !this.sfxGain) return
+    this.resume()
+    var t = this.ctx.currentTime
+    switch (name) {
+      case 'click': this.blip(660, t, 0.08, 'square', 0.18); this.blip(880, t + 0.03, 0.06, 'square', 0.12); break
+      case 'hover': this.blip(520, t, 0.05, 'sine', 0.07); break
+      case 'back': this.blip(440, t, 0.07, 'square', 0.14); this.blip(330, t + 0.04, 0.07, 'square', 0.1); break
+      case 'tick': this.blip(1200, t, 0.04, 'square', 0.08); break
+      case 'countdown': this.blip(440, t, 0.18, 'sine', 0.22); this.blip(660, t + 0.02, 0.16, 'triangle', 0.12); break
+      case 'go': this.blip(880, t, 0.12, 'square', 0.24); this.blip(1320, t + 0.05, 0.2, 'sawtooth', 0.18); this.sweep(t, 400, 2000, 0.3, 0.15); break
+      case 'start': this.sweep(t, 200, 1400, 0.5, 0.2); break
+      case 'warn': this.blip(1400, t, 0.05, 'square', 0.1); break
+      case 'closeCall': this.sweep(t, 1800, 600, 0.12, 0.14); break
+      case 'special': this.sweep(t, 300, 1600, 0.4, 0.16); this.blip(880, t + 0.18, 0.2, 'sawtooth', 0.12); break
+      case 'death': this.noiseBurst(t, 0.4, 0.3); this.sweep(t, 600, 60, 0.6, 0.3); this.blip(160, t + 0.02, 0.4, 'sawtooth', 0.22); break
+    }
+  }
+
+  AudioEngine.prototype.blip = function (freq, time, dur, type, vol) {
+    if (!this.ctx || !this.sfxGain) return
+    var o = this.ctx.createOscillator()
+    o.type = type; o.frequency.value = freq
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(0, time)
+    g.gain.linearRampToValueAtTime(vol, time + 0.005)
+    g.gain.exponentialRampToValueAtTime(0.0001, time + dur)
+    o.connect(g); g.connect(this.sfxGain)
+    o.start(time); o.stop(time + dur + 0.05)
+  }
+
+  AudioEngine.prototype.sweep = function (start, fromF, toF, dur, vol) {
+    if (!this.ctx || !this.sfxGain) return
+    var o = this.ctx.createOscillator()
+    o.type = 'sawtooth'
+    o.frequency.setValueAtTime(fromF, start)
+    o.frequency.exponentialRampToValueAtTime(Math.max(1, toF), start + dur)
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(0, start)
+    g.gain.linearRampToValueAtTime(vol, start + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur)
+    var lp = this.ctx.createBiquadFilter()
+    lp.type = 'lowpass'; lp.frequency.value = 2200
+    o.connect(lp); lp.connect(g); g.connect(this.sfxGain)
+    o.start(start); o.stop(start + dur + 0.05)
+  }
+
+  AudioEngine.prototype.noiseBurst = function (start, dur, vol) {
+    if (!this.ctx || !this.sfxGain) return
+    var bufferSize = dur * this.ctx.sampleRate
+    var buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+    var data = buffer.getChannelData(0)
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize)
+    var src = this.ctx.createBufferSource()
+    src.buffer = buffer
+    var lp = this.ctx.createBiquadFilter()
+    lp.type = 'lowpass'; lp.frequency.value = 1800
+    var g = this.ctx.createGain()
+    g.gain.setValueAtTime(vol, start)
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur)
+    src.connect(lp); lp.connect(g); g.connect(this.sfxGain)
+    src.start(start); src.stop(start + dur + 0.05)
+  }
+
+  AudioEngine.prototype.dispose = function () {
+    this.stopMusic()
+    if (this.ctx) { try { this.ctx.close() } catch (e) {} this.ctx = null }
+  }
+
+  var _engine = null
+  function getAudio() { if (!_engine) _engine = new AudioEngine(); return _engine }
+
+  global.LF.Audio = { getAudio: getAudio, AudioEngine: AudioEngine }
+})(window)
+
+  </script>
+  <script>
+// Laser Flow — core game engine (Canvas, 60 FPS). Plain JS port.
+// Systems: seeded RNG, 8-dir movement, laser lifecycle, 6 base + 5 new laser
+// events, anti-camp Stalker, Flow meter, power-ups, milestones, slow-mo,
+// particles, camera shake, bloom glow, themed rendering, accessibility.
+(function (global) {
+  'use strict'
+  var C = global.LF.Config
+  var getAudio = global.LF.Audio.getAudio
+  var TAU = Math.PI * 2
+  var BASE = { spawnInterval: 1150, warnTime: 820, activeTime: 1350, fadeTime: 260, maxConcurrent: 5, playerSpeed: 330 }
+  var MILESTONES = [30, 60, 90, 120, 150, 180]
+
+  function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v }
+  function withAlpha(hex, alpha) {
+    if (hex.indexOf('rgba') === 0 || hex.indexOf('rgb') === 0) return hex
+    if (hex.charAt(0) === '#') {
+      var h = hex.slice(1)
+      if (h.length === 3) h = h.split('').map(function (c) { return c + c }).join('')
+      var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16)
+      return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')'
+    }
+    return hex
+  }
+  function lighten(hex, amt) {
+    if (hex.charAt(0) !== '#') return hex
+    var h = hex.slice(1)
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c }).join('')
+    var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16)
+    var nr = Math.round(r + (255 - r) * amt), ng = Math.round(g + (255 - g) * amt), nb = Math.round(b + (255 - b) * amt)
+    return '#' + nr.toString(16).padStart(2, '0') + ng.toString(16).padStart(2, '0') + nb.toString(16).padStart(2, '0')
+  }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y)
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r)
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath()
+  }
+
+  function GameEngine(canvas, settings, cb, seed) {
+    this.canvas = canvas
+    this.ctx = canvas.getContext('2d', { alpha: false })
+    this.settings = settings
+    this.cb = cb
+    this.theme = C.THEMES[settings.theme]
+    this.diff = C.DIFFICULTIES[settings.difficulty]
+    this.seed = seed
+    this.dpr = 1; this.cw = 0; this.ch = 0
+    this.arenaX = 0; this.arenaY = 0; this.arenaW = 0; this.arenaH = 0
+    this.rafId = null; this.lastTime = 0; this.running = false; this.paused = false; this.mode = 'idle'
+    this.startTime = 0; this.elapsed = 0; this.deathTime = 0; this.deathElapsed = 0
+    this.player = { x: 0, y: 0, vx: 0, vy: 0, radius: 11, trail: [], alive: true }
+    this.lasers = []; this.particles = []; this.ambient = []; this.powerUps = []
+    this.nextSpawnAt = 0; this.nextPowerUpAt = 0; this.laserId = 1; this.powerUpId = 1
+    this.flow = 0; this.flowMax = 0; this.nearMisses = 0; this.powerUpsUsed = 0
+    this.specialsCleared = 0; this.lastNearMiss = 0; this.lastFlowEmit = 0; this.lastFlowTier = 1
+    this.effects = { shield: false, slowmoUntil: 0, phaseUntil: 0, multiplierUntil: 0 }
+    this.lastEffectsSig = ''
+    this.dwellRef = { x: 0, y: 0 }; this.dwellTime = 0; this.nextMilestoneIdx = 0
+    this.shake = 0; this.shakeX = 0; this.shakeY = 0; this.flashAlpha = 0; this.intensity = 0
+    this.keys = {}; this.joyX = 0; this.joyY = 0; this.usingTouch = false
+    this.rng = Math.random
+    this.setupRng(seed)
+    var self = this
+    this.resize()
+    this.initAmbient()
+    this.attachInput()
+    this.player.x = this.arenaX + this.arenaW / 2
+    this.player.y = this.arenaY + this.arenaH / 2
+    this.dwellRef = { x: this.player.x, y: this.player.y }
+    this.mode = 'idle'; this.running = true; this.lastTime = performance.now()
+    this._loopBound = function () { self.loop() }
+    this._loopBound()
+  }
+
+  GameEngine.prototype.setupRng = function (seed) {
+    if (seed) {
+      var h = 1779033703 ^ seed.length
+      for (var i = 0; i < seed.length; i++) { h = Math.imul(h ^ seed.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19) }
+      var s = h >>> 0
+      this.rng = function () {
+        s = (s + 0x6d2b79f5) | 0
+        var t = Math.imul(s ^ (s >>> 15), 1 | s)
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+      }
+    } else { this.rng = Math.random }
+  }
+  GameEngine.prototype.pick = function (arr) { return arr[Math.floor(this.rng() * arr.length)] }
+  Object.defineProperty(GameEngine.prototype, 'reduceFlash', { get: function () {
+    return this.settings.reduceFlash || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }})
+  Object.defineProperty(GameEngine.prototype, 'reducedMotion', { get: function () { return this.settings.reducedMotion }})
+  GameEngine.prototype.flashMul = function () { return this.reduceFlash ? 0.3 : 1 }
+  GameEngine.prototype.playerColor = function () {
+    return this.settings.skin === 'custom' ? this.settings.customColor : C.SKINS[this.settings.skin].color
+  }
+  GameEngine.prototype.playerGlow = function () {
+    return this.settings.skin === 'custom' ? lighten(this.settings.customColor, 0.45) : C.SKINS[this.settings.skin].glow
+  }
+  GameEngine.prototype.playerEffect = function () { return C.SKINS[this.settings.skin].effect }
+
+  GameEngine.prototype.resize = function () {
+    var rect = this.canvas.getBoundingClientRect()
+    this.cw = rect.width; this.ch = rect.height
+    this.dpr = Math.min(window.devicePixelRatio || 1, 2)
+    this.canvas.width = Math.floor(this.cw * this.dpr); this.canvas.height = Math.floor(this.ch * this.dpr)
+    this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0)
+    this.computeArena()
+    this.player.x = clamp(this.player.x, this.arenaX + this.player.radius, this.arenaX + this.arenaW - this.player.radius)
+    this.player.y = clamp(this.player.y, this.arenaY + this.player.radius, this.arenaY + this.arenaH - this.player.radius)
+  }
+  GameEngine.prototype.computeArena = function () {
+    var scale = C.ARENA_SIZES[this.settings.arenaSize].scale
+    var size = Math.min(this.cw, this.ch) * scale
+    this.arenaW = size; this.arenaH = size
+    this.arenaX = (this.cw - size) / 2; this.arenaY = (this.ch - size) / 2
+  }
+  GameEngine.prototype.initAmbient = function () {
+    this.ambient = []
+    var count = this.reducedMotion ? 24 : 46
+    for (var i = 0; i < count; i++) {
+      this.ambient.push({ x: this.rng() * this.cw, y: this.rng() * this.ch, vx: (this.rng() - 0.5) * 8, vy: (this.rng() - 0.5) * 8, life: 1, maxLife: 1, size: 0.6 + this.rng() * 1.8, color: this.theme.particle })
+    }
+  }
+  GameEngine.prototype.attachInput = function () {
+    var self = this
+    this._onKeyDown = function (e) {
+      var k = e.key.toLowerCase()
+      if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].indexOf(k) !== -1) { self.keys[k] = true; e.preventDefault() }
+      if (k === 'escape' || k === 'p') self.cb.onPauseRequest && self.cb.onPauseRequest()
+    }
+    this._onKeyUp = function (e) { delete self.keys[e.key.toLowerCase()] }
+    this._onBlur = function () { self.keys = {} }
+    window.addEventListener('keydown', this._onKeyDown)
+    window.addEventListener('keyup', this._onKeyUp)
+    window.addEventListener('blur', this._onBlur)
+  }
+  GameEngine.prototype.setJoystick = function (x, y) { this.joyX = x; this.joyY = y; this.usingTouch = Math.abs(x) + Math.abs(y) > 0.01 }
+
+  GameEngine.prototype.start = function () {
+    this.running = true; this.paused = false; this.mode = 'play'
+    var now = performance.now()
+    this.startTime = now; this.lastTime = now; this.elapsed = 0; this.deathTime = 0; this.deathElapsed = 0
+    this.lasers = []; this.particles = []; this.powerUps = []
+    this.nextSpawnAt = now + 500; this.nextPowerUpAt = now + 7000 + this.rng() * 3000
+    this.shake = 0; this.flashAlpha = 0; this.intensity = 0
+    this.flow = 0; this.flowMax = 0; this.nearMisses = 0; this.powerUpsUsed = 0
+    this.specialsCleared = 0; this.nextMilestoneIdx = 0; this.lastFlowEmit = 0; this.lastFlowTier = 1; this.lastEffectsSig = ''
+    this.effects = { shield: false, slowmoUntil: 0, phaseUntil: 0, multiplierUntil: 0 }
+    this.player.alive = true; this.player.x = this.arenaX + this.arenaW / 2; this.player.y = this.arenaY + this.arenaH / 2
+    this.player.vx = 0; this.player.vy = 0; this.player.trail = []
+    this.dwellRef = { x: this.player.x, y: this.player.y }; this.dwellTime = 0
+  }
+  GameEngine.prototype.pause = function () { if (!this.running || !this.player.alive) return; this.paused = true }
+  GameEngine.prototype.resume = function () { if (!this.running || !this.player.alive) return; this.paused = false; this.lastTime = performance.now() }
+  GameEngine.prototype.destroy = function () {
+    this.running = false
+    if (this.rafId != null) cancelAnimationFrame(this.rafId)
+    this.rafId = null
+    window.removeEventListener('keydown', this._onKeyDown)
+    window.removeEventListener('keyup', this._onKeyUp)
+    window.removeEventListener('blur', this._onBlur)
+  }
+
+  GameEngine.prototype.loop = function () {
+    if (!this.running) return
+    var self = this
+    this.rafId = requestAnimationFrame(function () { self.loop() })
+    var now = performance.now()
+    var dt = (now - this.lastTime) / 1000
+    this.lastTime = now
+    if (dt > 0.05) dt = 0.05
+    if (this.mode === 'idle') { this.updateAmbient(dt); this.render(dt); return }
+    if (this.paused) { this.render(0); return }
+    this.update(dt, now); this.render(dt)
+  }
+
+  GameEngine.prototype.update = function (dt, now) {
+    var slowmo = now < this.effects.slowmoUntil
+    var simDt = slowmo ? dt * 0.45 : dt
+    if (this.player.alive) {
+      this.elapsed = (now - this.startTime) / 1000
+      if (this.cb.onTime) this.cb.onTime(this.elapsed)
+      this.checkMilestones()
+    } else {
+      this.deathElapsed += dt
+      if (this.deathElapsed > 1.1) {
+        this.running = false
+        this.cb.onDeath(this.deathTime, { flowMax: this.flowMax, nearMisses: this.nearMisses, powerUpsUsed: this.powerUpsUsed, specialsCleared: this.specialsCleared })
+        return
+      }
+    }
+    var progress = this.elapsed / 55
+    var ramp = 1 + Math.min(progress, 2.2) * this.diff.rampMult * 0.55
+    var targetIntensity = Math.min(progress * this.diff.rampMult, 1)
+    this.intensity += (targetIntensity - this.intensity) * 0.04
+    if (this.cb.onIntensity) this.cb.onIntensity(this.intensity)
+    if (this.player.alive) {
+      this.updatePlayer(simDt); this.updateFlow(simDt, now)
+      this.maybeSpawn(now, ramp); this.maybeSpawnPowerUp(now)
+      this.checkDwell(simDt, now); this.updateLasers(simDt, now)
+      this.updatePowerUps(simDt, now); this.checkCollisions(now)
+    } else { this.updateLasers(simDt, now); this.updatePowerUps(simDt, now) }
+    this.updateParticles(simDt); this.updateAmbient(dt)
+    this.shake *= Math.pow(0.0001, dt)
+    if (this.shake < 0.05) this.shake = 0
+    this.shakeX = (this.rng() - 0.5) * this.shake; this.shakeY = (this.rng() - 0.5) * this.shake
+    this.flashAlpha *= Math.pow(0.0005, dt)
+  }
+
+  GameEngine.prototype.updatePlayer = function (dt) {
+    var p = this.player, ix = 0, iy = 0
+    if (this.keys['a'] || this.keys['arrowleft']) ix -= 1
+    if (this.keys['d'] || this.keys['arrowright']) ix += 1
+    if (this.keys['w'] || this.keys['arrowup']) iy -= 1
+    if (this.keys['s'] || this.keys['arrowdown']) iy += 1
+    if (this.usingTouch) { ix = this.joyX; iy = this.joyY }
+    var mag = Math.hypot(ix, iy)
+    if (mag > 1) { ix /= mag; iy /= mag }
+    var sens = clamp(this.settings.joystickSensitivity, 0.5, 1.5)
+    var speedMult = C.ARENA_SIZES[this.settings.arenaSize].playerSpeedMult * (1 + this.intensity * 0.06) * sens
+    var maxSpeed = BASE.playerSpeed * speedMult
+    var tvx = ix * maxSpeed, tvy = iy * maxSpeed
+    var accel = 1 - Math.pow(0.0001, dt)
+    p.vx += (tvx - p.vx) * accel; p.vy += (tvy - p.vy) * accel
+    p.x += p.vx * dt; p.y += p.vy * dt
+    var r = p.radius
+    p.x = clamp(p.x, this.arenaX + r, this.arenaX + this.arenaW - r)
+    p.y = clamp(p.y, this.arenaY + r, this.arenaY + this.arenaH - r)
+    p.trail.push({ x: p.x, y: p.y })
+    if (p.trail.length > 14) p.trail.shift()
+    var effect = this.playerEffect(), glow = this.playerGlow()
+    if ((effect === 'spark' || effect === 'trail') && Math.hypot(p.vx, p.vy) > 60 && this.rng() < 0.6 && !this.reducedMotion) {
+      this.particles.push({ x: p.x, y: p.y, vx: -p.vx * 0.1 + (this.rng() - 0.5) * 30, vy: -p.vy * 0.1 + (this.rng() - 0.5) * 30, life: 0.5, maxLife: 0.5, size: 1.5 + this.rng() * 1.5, color: glow })
+    }
+  }
+
+  GameEngine.prototype.updateFlow = function (dt, now) {
+    if (now - this.lastNearMiss > 700) this.flow -= 6 * dt
+    if (this.flow < 0) this.flow = 0
+    if (this.flow > 100) this.flow = 100
+    if (this.flow > this.flowMax) this.flowMax = this.flow
+    var tier = this.flowTier()
+    if (now - this.lastFlowEmit > 120 || tier !== this.lastFlowTier) {
+      this.lastFlowEmit = now; this.lastFlowTier = tier
+      if (this.cb.onFlow) this.cb.onFlow(this.flow, this.flowMultiplier())
+    }
+  }
+  GameEngine.prototype.flowTier = function () { if (this.flow >= 75) return 4; if (this.flow >= 50) return 3; if (this.flow >= 25) return 2; return 1 }
+  GameEngine.prototype.flowMultiplier = function () { return this.flowTier() }
+  GameEngine.prototype.chargeFlow = function (amount) {
+    var mult = performance.now() < this.effects.multiplierUntil ? 2 : 1
+    this.flow = Math.min(100, this.flow + amount * mult)
+    if (this.flow > this.flowMax) this.flowMax = this.flow
+  }
+
+  GameEngine.prototype.maybeSpawn = function (now, ramp) {
+    var interval = BASE.spawnInterval / (this.diff.spawnRateMult * (0.7 + ramp * 0.5))
+    if (now < this.nextSpawnAt) return
+    var maxConcurrent = Math.floor(BASE.maxConcurrent * this.diff.maxConcurrentMult + this.intensity * 4)
+    var activeCount = 0
+    for (var i = 0; i < this.lasers.length; i++) if (this.lasers[i].state !== 'fading') activeCount++
+    if (activeCount >= maxConcurrent) { this.nextSpawnAt = now + 120; return }
+    this.spawnLaser(now, ramp)
+    this.nextSpawnAt = now + interval * (0.7 + this.rng() * 0.6)
+  }
+  GameEngine.prototype.currentTimes = function (ramp) {
+    var warn = Math.max(260, BASE.warnTime * this.diff.warnTimeMult * (1 / (0.6 + ramp * 0.4)))
+    var active = BASE.activeTime * this.diff.activeTimeMult * (1 + this.intensity * 0.25)
+    return { warn: warn, active: active, fade: BASE.fadeTime }
+  }
+
+  GameEngine.prototype.spawnLaser = function (now, ramp) {
+    var t = this.currentTimes(ramp), color = this.pick(this.theme.lasers), r = this.rng(), kind = 'line'
+    if (r < this.diff.specialChance) {
+      kind = this.pick(['rotating', 'pulsing', 'wall', 'grid', 'homing', 'shrink', 'mirror', 'sliding'])
+      if (this.rng() < 0.18) { this.spawnFlashBurst(now, ramp); return }
+    }
+    switch (kind) {
+      case 'rotating': this.spawnRotating(now, t.warn, t.active, t.fade, color); break
+      case 'pulsing': this.spawnPulsing(now, t.warn, t.active, t.fade, color); break
+      case 'wall': this.spawnWall(now, t.warn, t.active, t.fade, color); break
+      case 'grid': this.spawnGrid(now, t.warn, t.active, t.fade, color); break
+      case 'homing': this.spawnHoming(now, t.warn, t.active, t.fade, color); break
+      case 'shrink': this.spawnShrink(now, t.warn, t.active, t.fade, color); break
+      case 'mirror': this.spawnMirror(now, t.warn, t.active, t.fade, color); break
+      case 'sliding': this.spawnSliding(now, t.warn, t.active, t.fade, color); break
+      default: this.spawnLine(now, t.warn, t.active, t.fade, color)
+    }
+  }
+
+  GameEngine.prototype.spawnLine = function (now, warn, active, fade, color, forcedPos) {
+    var orient = this.pick(['h', 'v', 'd']), a = { x: 0, y: 0 }, b = { x: 0, y: 0 }, thickness = 5 + this.rng() * 3
+    if (forcedPos) {
+      var o = this.pick(['h', 'v'])
+      if (o === 'h') { a = { x: this.arenaX, y: forcedPos.y }; b = { x: this.arenaX + this.arenaW, y: forcedPos.y } }
+      else { a = { x: forcedPos.x, y: this.arenaY }; b = { x: forcedPos.x, y: this.arenaY + this.arenaH } }
+      this.pushLaser({ kind: 'stalker', a: a, b: b, thickness: 7, color: '#f43f5e', warn: warn, active: active, fade: fade, now: now, target: { x: forcedPos.x, y: forcedPos.y } }); return
+    }
+    var pos = 0, safe = false, margin = 30, attempt
+    for (attempt = 0; attempt < 5; attempt++) {
+      if (orient === 'h') {
+        pos = this.arenaY + margin + this.rng() * (this.arenaH - margin * 2)
+        a = { x: this.arenaX, y: pos }; b = { x: this.arenaX + this.arenaW, y: pos }
+        if (Math.abs(pos - this.player.y) > 60) { safe = true; break }
+      } else if (orient === 'v') {
+        pos = this.arenaX + margin + this.rng() * (this.arenaW - margin * 2)
+        a = { x: pos, y: this.arenaY }; b = { x: pos, y: this.arenaY + this.arenaH }
+        if (Math.abs(pos - this.player.x) > 60) { safe = true; break }
+      } else {
+        var cc = this.pick([[0, 0, 1, 1], [1, 0, 0, 1], [0.15, 0, 1, 0.85], [0, 0.15, 0.85, 1]])
+        a = { x: this.arenaX + cc[0] * this.arenaW, y: this.arenaY + cc[1] * this.arenaH }
+        b = { x: this.arenaX + cc[2] * this.arenaW, y: this.arenaY + cc[3] * this.arenaH }
+        if (this.pointLineDist(this.player.x, this.player.y, a, b) > 60) { safe = true; break }
+      }
+    }
+    if (!safe && orient !== 'd') {
+      if (orient === 'h') { pos = this.arenaY + this.arenaH / 2 + (this.rng() > 0.5 ? 80 : -80); a = { x: this.arenaX, y: pos }; b = { x: this.arenaX + this.arenaW, y: pos } }
+      else { pos = this.arenaX + this.arenaW / 2 + (this.rng() > 0.5 ? 80 : -80); a = { x: pos, y: this.arenaY }; b = { x: pos, y: this.arenaY + this.arenaH } }
+    }
+    this.pushLaser({ kind: 'line', a: a, b: b, thickness: thickness, color: color, warn: warn, active: active, fade: fade, now: now })
+  }
+
+  GameEngine.prototype.spawnRotating = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('SWEEP BEAM'); this.triggerSpecialFx()
+    var pivot = { x: this.arenaX + this.arenaW / 2, y: this.arenaY + this.arenaH / 2 }
+    var length = Math.hypot(this.arenaW, this.arenaH), ang0 = this.rng() * TAU
+    var rotMult = C.LASER_SPEEDS[this.settings.laserSpeed].rotSpeedMult
+    var angSpeed = (0.5 + this.rng() * 0.4) * rotMult * (this.rng() > 0.5 ? 1 : -1)
+    this.pushLaser({ kind: 'rotating', a: pivot, b: { x: pivot.x + Math.cos(ang0) * length, y: pivot.y + Math.sin(ang0) * length }, angle: ang0, angularSpeed: angSpeed, length: length, thickness: 6, color: color, warn: warn, active: active, fade: fade, now: now })
+  }
+  GameEngine.prototype.spawnPulsing = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('PULSE GRID'); this.triggerSpecialFx()
+    var orient = this.pick(['h', 'v']), pos = orient === 'h' ? this.arenaY + 40 + this.rng() * (this.arenaH - 80) : this.arenaX + 40 + this.rng() * (this.arenaW - 80)
+    var a = orient === 'h' ? { x: this.arenaX, y: pos } : { x: pos, y: this.arenaY }
+    var b = orient === 'h' ? { x: this.arenaX + this.arenaW, y: pos } : { x: pos, y: this.arenaY + this.arenaH }
+    this.pushLaser({ kind: 'pulsing', a: a, b: b, thickness: 6, color: color, warn: warn, active: active, fade: fade, now: now, pulsePeriod: 0.5, pulseOn: true })
+  }
+  GameEngine.prototype.spawnWall = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('CLOSING WALLS'); this.triggerSpecialFx()
+    var horizontal = this.rng() > 0.5, safeCenter = 0.35 + this.rng() * 0.3, safeHalf = 0.12 + this.rng() * 0.05
+    this.pushLaser({ kind: 'wall', a: { x: this.arenaX, y: this.arenaY + safeCenter * this.arenaH }, b: { x: this.arenaX + this.arenaW, y: this.arenaY + safeCenter * this.arenaH }, thickness: 10, color: color, warn: warn, active: active, fade: fade, now: now, pulsePeriod: horizontal ? 1 : 0, gaps: [safeCenter, safeHalf] })
+  }
+  GameEngine.prototype.spawnGrid = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('LASER GRID'); this.triggerSpecialFx()
+    var cols = 4, rows = 4, gapCol = Math.floor(this.rng() * cols), gapRow = Math.floor(this.rng() * rows)
+    this.pushLaser({ kind: 'grid', a: { x: this.arenaX, y: this.arenaY }, b: { x: this.arenaX + this.arenaW, y: this.arenaY + this.arenaH }, thickness: 5, color: color, warn: warn, active: active, fade: fade, now: now, gaps: [cols, rows, gapCol, gapRow] })
+  }
+  GameEngine.prototype.spawnHoming = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('HOMING LOCK'); this.triggerSpecialFx()
+    this.pushLaser({ kind: 'homing', a: { x: this.arenaX, y: this.arenaY }, b: { x: this.player.x, y: this.player.y }, thickness: 6, color: color, warn: warn, active: active, fade: fade, now: now, target: { x: this.player.x, y: this.player.y } })
+  }
+  GameEngine.prototype.spawnShrink = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('SHRINK ZONE'); this.triggerSpecialFx()
+    this.pushLaser({ kind: 'shrink', a: { x: this.arenaX, y: this.arenaY }, b: { x: this.arenaX + this.arenaW, y: this.arenaY + this.arenaH }, thickness: 8, color: color, warn: warn, active: active, fade: fade, now: now, shrinkFrac: 0, gaps: [0.18] })
+  }
+  GameEngine.prototype.spawnMirror = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('MIRROR PAIR'); this.triggerSpecialFx()
+    var horizontal = this.rng() > 0.5
+    var a = horizontal ? { x: this.arenaX, y: this.arenaY + this.arenaH * 0.12 } : { x: this.arenaX + this.arenaW * 0.12, y: this.arenaY }
+    var b = horizontal ? { x: this.arenaX + this.arenaW, y: this.arenaY + this.arenaH * 0.12 } : { x: this.arenaX + this.arenaW * 0.12, y: this.arenaY + this.arenaH }
+    this.pushLaser({ kind: 'mirror', a: a, b: b, thickness: 6, color: color, warn: warn, active: active, fade: fade, now: now, mirrorOffset: horizontal ? 1 : 0, gaps: [0.12, 0.88] })
+  }
+  GameEngine.prototype.spawnSliding = function (now, warn, active, fade, color) {
+    if (this.cb.onSpecial) this.cb.onSpecial('SLIDING GATE'); this.triggerSpecialFx()
+    var horizontal = this.rng() > 0.5
+    var pos = horizontal ? this.arenaY + this.arenaH * (0.3 + this.rng() * 0.4) : this.arenaX + this.arenaW * (0.3 + this.rng() * 0.4)
+    var a = horizontal ? { x: this.arenaX, y: pos } : { x: pos, y: this.arenaY }
+    var b = horizontal ? { x: this.arenaX + this.arenaW, y: pos } : { x: pos, y: this.arenaY + this.arenaH }
+    this.pushLaser({ kind: 'sliding', a: a, b: b, thickness: 7, color: color, warn: warn, active: active, fade: fade, now: now, gapPos: this.rng(), gapWidth: 0.18, mirrorOffset: horizontal ? 1 : 0 })
+  }
+  GameEngine.prototype.spawnFlashBurst = function (now, ramp) {
+    if (this.cb.onSpecial) this.cb.onSpecial('RAPID FLASH'); this.triggerSpecialFx()
+    var count = 4 + Math.floor(this.rng() * 3), t = this.currentTimes(ramp)
+    var flashWarn = Math.max(180, t.warn * 0.35), flashActive = Math.max(420, t.active * 0.5)
+    for (var i = 0; i < count; i++) {
+      var color = this.pick(this.theme.lasers), orient = this.pick(['h', 'v'])
+      var pos = orient === 'h' ? this.arenaY + 30 + this.rng() * (this.arenaH - 60) : this.arenaX + 30 + this.rng() * (this.arenaW - 60)
+      var a = orient === 'h' ? { x: this.arenaX, y: pos } : { x: pos, y: this.arenaY }
+      var b = orient === 'h' ? { x: this.arenaX + this.arenaW, y: pos } : { x: pos, y: this.arenaY + this.arenaH }
+      this.pushLaser({ kind: 'line', a: a, b: b, thickness: 5, color: color, warn: flashWarn, active: flashActive, fade: t.fade, now: now + i * 130 })
+    }
+  }
+
+  GameEngine.prototype.checkDwell = function (dt, now) {
+    var d = Math.hypot(this.player.x - this.dwellRef.x, this.player.y - this.dwellRef.y)
+    if (d > 42) { this.dwellRef = { x: this.player.x, y: this.player.y }; this.dwellTime = 0; return }
+    this.dwellTime += dt
+    var threshold = 2.4 / this.diff.rampMult
+    if (this.dwellTime > threshold) {
+      this.spawnLine(now, 460, 650, 240, '#f43f5e', { x: this.player.x, y: this.player.y })
+      if (this.settings.sound) getAudio().sfx('warn')
+      this.dwellRef = { x: this.player.x, y: this.player.y }; this.dwellTime = 0
+    }
+  }
+
+  GameEngine.prototype.pushLaser = function (o) {
+    var born = o.now
+    this.lasers.push({
+      id: this.laserId++, kind: o.kind, state: 'warning', bornAt: born, warnUntil: born + o.warn, activeUntil: born + o.warn + o.active, fadeUntil: born + o.warn + o.active + o.fade,
+      a: o.a, b: o.b, angle: o.angle || 0, angularSpeed: o.angularSpeed || 0, length: o.length || 0, thickness: o.thickness, color: o.color,
+      pulseOn: o.pulseOn != null ? o.pulseOn : true, pulsePeriod: o.pulsePeriod || 0, side: o.side, gaps: o.gaps, intensity: 0,
+      target: o.target, mirrorOffset: o.mirrorOffset, gapPos: o.gapPos, gapWidth: o.gapWidth, shrinkFrac: o.shrinkFrac,
+    })
+    if (this.settings.sound) {
+      var delay = Math.max(0, born - performance.now())
+      var audio = getAudio()
+      setTimeout(function () { audio.sfx('warn') }, delay)
+    }
+  }
+  GameEngine.prototype.triggerSpecialFx = function () {
+    this.shake = Math.max(this.shake, this.reducedMotion ? 4 : 9)
+    this.flashAlpha = Math.max(this.flashAlpha, 0.18 * this.flashMul())
+    if (this.settings.sound) getAudio().sfx('special')
+    if (this.settings.vibration && navigator.vibrate) navigator.vibrate(30)
+  }
+
+  GameEngine.prototype.maybeSpawnPowerUp = function (now) {
+    if (now < this.nextPowerUpAt) return
+    if (this.powerUps.length >= 2) { this.nextPowerUpAt = now + 4000; return }
+    var kinds = ['shield', 'slowmo', 'phase', 'multiplier'], kind = this.pick(kinds)
+    var meta = C.POWER_UP_META[kind], x = 0, y = 0, i
+    for (i = 0; i < 8; i++) {
+      x = this.arenaX + 50 + this.rng() * (this.arenaW - 100); y = this.arenaY + 50 + this.rng() * (this.arenaH - 100)
+      if (Math.hypot(x - this.player.x, y - this.player.y) > 90) break
+    }
+    this.powerUps.push({ id: this.powerUpId++, kind: kind, x: x, y: y, bornAt: now, expireAt: now + 9000, radius: 13, color: meta.color, bob: this.rng() * TAU })
+    this.nextPowerUpAt = now + 9000 + this.rng() * 5000
+  }
+  GameEngine.prototype.updatePowerUps = function (dt, now) {
+    for (var i = 0; i < this.powerUps.length; i++) this.powerUps[i].bob += dt * 3
+    if (this.player.alive) {
+      for (i = this.powerUps.length - 1; i >= 0; i--) {
+        var p = this.powerUps[i]
+        if (Math.hypot(p.x - this.player.x, p.y - this.player.y) < p.radius + this.player.radius) {
+          this.applyPowerUp(p.kind, now); this.powerUps.splice(i, 1); this.powerUpsUsed++
+          if (this.cb.onPickup) this.cb.onPickup(p.kind)
+          if (this.settings.sound) getAudio().sfx('start')
+          if (!this.reducedMotion) {
+            for (var j = 0; j < 18; j++) {
+              var ang = this.rng() * TAU, spd = 40 + this.rng() * 120
+              this.particles.push({ x: p.x, y: p.y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, life: 0.6, maxLife: 0.6, size: 1.5 + this.rng() * 2, color: p.color })
+            }
+          }
+        }
+      }
+    }
+    var kept = []
+    for (i = 0; i < this.powerUps.length; i++) if (now < this.powerUps[i].expireAt) kept.push(this.powerUps[i])
+    this.powerUps = kept
+    var sig = this.effects.shield + '|' + this.effects.slowmoUntil + '|' + this.effects.phaseUntil + '|' + this.effects.multiplierUntil
+    if (sig !== this.lastEffectsSig) {
+      this.lastEffectsSig = sig
+      if (this.cb.onPowerUp) this.cb.onPowerUp({ shield: this.effects.shield, slowmoUntil: this.effects.slowmoUntil, phaseUntil: this.effects.phaseUntil, multiplierUntil: this.effects.multiplierUntil })
+    }
+  }
+  GameEngine.prototype.applyPowerUp = function (kind, now) {
+    if (kind === 'shield') this.effects.shield = true
+    else if (kind === 'slowmo') this.effects.slowmoUntil = now + C.POWER_UP_META.slowmo.duration
+    else if (kind === 'phase') this.effects.phaseUntil = now + C.POWER_UP_META.phase.duration
+    else if (kind === 'multiplier') this.effects.multiplierUntil = now + C.POWER_UP_META.multiplier.duration
+  }
+
+  GameEngine.prototype.checkMilestones = function () {
+    if (this.nextMilestoneIdx >= MILESTONES.length) return
+    var target = MILESTONES[this.nextMilestoneIdx]
+    if (this.elapsed >= target) {
+      this.nextMilestoneIdx++
+      if (this.cb.onMilestone) this.cb.onMilestone(target)
+      this.flashAlpha = Math.max(this.flashAlpha, 0.25 * this.flashMul())
+      this.shake = Math.max(this.shake, this.reducedMotion ? 3 : 6)
+      if (this.settings.sound) getAudio().sfx('go')
+      if (this.settings.vibration && navigator.vibrate) navigator.vibrate(20)
+    }
+  }
+
+  GameEngine.prototype.updateLasers = function (dt, now) {
+    for (var i = 0; i < this.lasers.length; i++) {
+      var l = this.lasers[i]
+      if (now < l.bornAt) continue
+      if (l.state === 'warning' && now >= l.warnUntil) { l.state = 'active'; l.intensity = 1; if (this.settings.sound && this.player.alive) getAudio().sfx('tick') }
+      else if (l.state === 'active' && now >= l.activeUntil) { l.state = 'fading'; if (this.player.alive && l.kind !== 'line' && l.kind !== 'stalker') this.specialsCleared++ }
+      if (l.kind === 'rotating' && l.state === 'active') { l.angle += l.angularSpeed * dt; l.b = { x: l.a.x + Math.cos(l.angle) * l.length, y: l.a.y + Math.sin(l.angle) * l.length } }
+      if (l.kind === 'pulsing' && l.state === 'active') { var phase = ((now - l.warnUntil) / 1000) % l.pulsePeriod; l.pulseOn = phase < l.pulsePeriod * 0.5 }
+      if (l.kind === 'homing' && l.state === 'warning' && l.target) { l.target.x += (this.player.x - l.target.x) * (1 - Math.pow(0.02, dt)); l.target.y += (this.player.y - l.target.y) * (1 - Math.pow(0.02, dt)); l.b = { x: l.target.x, y: l.target.y } }
+      if (l.kind === 'shrink' && l.state === 'active') {
+        var dur = l.activeUntil - l.warnUntil, closeDur = dur * 0.45, holdEnd = dur * 0.8, tt = now - l.warnUntil
+        if (tt < closeDur) l.shrinkFrac = (tt / closeDur) * (l.gaps[0] || 0.18)
+        else if (tt < holdEnd) l.shrinkFrac = l.gaps[0] || 0.18
+        else { var rt = (tt - holdEnd) / (dur - holdEnd); l.shrinkFrac = (l.gaps[0] || 0.18) * Math.max(0, 1 - rt) }
+      }
+      if (l.kind === 'mirror' && l.state === 'active' && l.gaps) {
+        var mt = (now - l.warnUntil) / (l.activeUntil - l.warnUntil), s0 = 0.12, s1 = 0.88, mid = 0.5
+        l.gaps[0] = s0 + (mid - s0) * mt; l.gaps[1] = s1 + (mid - s1) * mt
+      }
+      if (l.kind === 'sliding' && l.state === 'active' && l.gapWidth != null) {
+        var st = (now - l.warnUntil) / (l.activeUntil - l.warnUntil)
+        l.gapPos = 0.1 + 0.8 * (0.5 - 0.5 * Math.cos(st * Math.PI * 2))
+      }
+      if (l.state === 'warning') { var wt = (now - l.bornAt) / (l.warnUntil - l.bornAt); l.intensity = 0.3 + 0.7 * wt }
+      else if (l.state === 'fading') { var ft = (now - l.activeUntil) / (l.fadeUntil - l.activeUntil); l.intensity = Math.max(0, 1 - ft) }
+    }
+    var kept = []
+    for (i = 0; i < this.lasers.length; i++) if (now < this.lasers[i].fadeUntil) kept.push(this.lasers[i])
+    this.lasers = kept
+  }
+
+  GameEngine.prototype.checkCollisions = function (now) {
+    if (!this.player.alive) return
+    var p = this.player, phase = now < this.effects.phaseUntil, i
+    for (i = 0; i < this.lasers.length; i++) {
+      var l = this.lasers[i]
+      if (now < l.bornAt || l.state !== 'active') continue
+      var hit = false
+      if (l.kind === 'line' || l.kind === 'rotating' || l.kind === 'pulsing' || l.kind === 'stalker' || l.kind === 'homing') {
+        if (l.kind === 'pulsing' && !l.pulseOn) continue
+        var d = this.pointLineDist(p.x, p.y, l.a, l.b)
+        if (d < p.radius + l.thickness / 2) hit = true
+      } else if (l.kind === 'wall') hit = this.wallHit(l, now)
+      else if (l.kind === 'grid') hit = this.gridHit(l)
+      else if (l.kind === 'shrink') hit = this.shrinkHit(l)
+      else if (l.kind === 'mirror') hit = this.mirrorHit(l)
+      else if (l.kind === 'sliding') hit = this.slidingHit(l)
+      if (hit) {
+        if (phase) {
+          if (!this.reducedMotion) { for (var k = 0; k < 6; k++) { var ang = this.rng() * TAU; this.particles.push({ x: p.x, y: p.y, vx: Math.cos(ang) * 80, vy: Math.sin(ang) * 80, life: 0.3, maxLife: 0.3, size: 2, color: '#fbbf24' }) } }
+          continue
+        }
+        if (this.effects.shield) {
+          this.effects.shield = false
+          this.shake = Math.max(this.shake, this.reducedMotion ? 4 : 10)
+          this.flashAlpha = Math.max(this.flashAlpha, 0.3 * this.flashMul())
+          if (this.settings.sound) getAudio().sfx('special')
+          if (this.settings.vibration && navigator.vibrate) navigator.vibrate(40)
+          l.state = 'fading'; l.fadeUntil = now + 120; l.activeUntil = now; continue
+        }
+        this.die(now); return
+      }
+      if ((l.kind === 'line' || l.kind === 'rotating' || l.kind === 'homing' || l.kind === 'stalker' || (l.kind === 'pulsing' && l.pulseOn)) && now - this.lastNearMiss > 350) {
+        var dd = this.pointLineDist(p.x, p.y, l.a, l.b)
+        var near = dd < p.radius + l.thickness / 2 + 16
+        if (near && dd >= p.radius + l.thickness / 2) {
+          this.lastNearMiss = now; this.nearMisses++; this.chargeFlow(7)
+          if (this.settings.sound) getAudio().sfx('closeCall')
+          this.shake = Math.max(this.shake, this.reducedMotion ? 1.5 : 3)
+          if (this.settings.vibration && navigator.vibrate) navigator.vibrate(12)
+        }
+      }
+    }
+  }
+
+  GameEngine.prototype.wallHit = function (l, now) {
+    var p = this.player, sc = l.gaps[0], sh = l.gaps[1], horizontal = l.pulsePeriod === 1
+    var closeDur = l.activeUntil - l.warnUntil, progress = clamp((now - l.warnUntil) / closeDur, 0, 1)
+    var eased = progress < 0.7 ? progress / 0.7 : 1, maxClose = 0.5 - sh, close = eased * maxClose
+    if (horizontal) {
+      var topEdge = this.arenaY + close * this.arenaH, botEdge = this.arenaY + (1 - close) * this.arenaH
+      if (p.y < topEdge + l.thickness / 2 && p.y > topEdge - l.thickness * 2) return true
+      if (p.y > botEdge - l.thickness / 2 && p.y < botEdge + l.thickness * 2) return true
+    } else {
+      var leftEdge = this.arenaX + close * this.arenaW, rightEdge = this.arenaX + (1 - close) * this.arenaW
+      if (p.x < leftEdge + l.thickness / 2 && p.x > leftEdge - l.thickness * 2) return true
+      if (p.x > rightEdge - l.thickness / 2 && p.x < rightEdge + l.thickness * 2) return true
+    }
+    return false
+  }
+  GameEngine.prototype.gridHit = function (l) {
+    var p = this.player, g = l.gaps, cols = g[0], rows = g[1], gapCol = g[2], gapRow = g[3]
+    var cw = this.arenaW / cols, ch = this.arenaH / rows, i
+    for (i = 0; i <= cols; i++) { if (i === gapCol || i === gapCol + 1) continue; var x = this.arenaX + i * cw; if (Math.abs(p.x - x) < p.radius + l.thickness / 2) return true }
+    for (i = 0; i <= rows; i++) { if (i === gapRow || i === gapRow + 1) continue; var y = this.arenaY + i * ch; if (Math.abs(p.y - y) < p.radius + l.thickness / 2) return true }
+    return false
+  }
+  GameEngine.prototype.shrinkHit = function (l) {
+    var frac = l.shrinkFrac || 0; if (frac <= 0.01) return false
+    var p = this.player, left = this.arenaX + frac * this.arenaW, right = this.arenaX + (1 - frac) * this.arenaW
+    var top = this.arenaY + frac * this.arenaH, bottom = this.arenaY + (1 - frac) * this.arenaH
+    if (p.x < left + p.radius) return true; if (p.x > right - p.radius) return true
+    if (p.y < top + p.radius) return true; if (p.y > bottom - p.radius) return true
+    return false
+  }
+  GameEngine.prototype.mirrorHit = function (l) {
+    var p = this.player, horizontal = l.mirrorOffset === 1, f0 = l.gaps[0], f1 = l.gaps[1]
+    if (horizontal) {
+      var y0 = this.arenaY + f0 * this.arenaH, y1 = this.arenaY + f1 * this.arenaH
+      if (Math.abs(p.y - y0) < p.radius + l.thickness / 2) return true
+      if (Math.abs(p.y - y1) < p.radius + l.thickness / 2) return true
+    } else {
+      var x0 = this.arenaX + f0 * this.arenaW, x1 = this.arenaX + f1 * this.arenaW
+      if (Math.abs(p.x - x0) < p.radius + l.thickness / 2) return true
+      if (Math.abs(p.x - x1) < p.radius + l.thickness / 2) return true
+    }
+    return false
+  }
+  GameEngine.prototype.slidingHit = function (l) {
+    var p = this.player, horizontal = l.mirrorOffset === 1, gp = l.gapPos != null ? l.gapPos : 0.5, gw = l.gapWidth != null ? l.gapWidth : 0.18
+    if (horizontal) {
+      if (Math.abs(p.y - l.a.y) < p.radius + l.thickness / 2) {
+        var relX = (p.x - this.arenaX) / this.arenaW, gapLo = gp - gw / 2, gapHi = gp + gw / 2
+        if (relX < gapLo || relX > gapHi) return true
+      }
+    } else {
+      if (Math.abs(p.x - l.a.x) < p.radius + l.thickness / 2) {
+        var relY = (p.y - this.arenaY) / this.arenaH, gapLo2 = gp - gw / 2, gapHi2 = gp + gw / 2
+        if (relY < gapLo2 || relY > gapHi2) return true
+      }
+    }
+    return false
+  }
+  GameEngine.prototype.pointLineDist = function (px, py, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y, len2 = dx * dx + dy * dy
+    if (len2 === 0) return Math.hypot(px - a.x, py - a.y)
+    var t = ((px - a.x) * dx + (py - a.y) * dy) / len2; t = clamp(t, 0, 1)
+    return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy))
+  }
+
+  GameEngine.prototype.die = function (now) {
+    if (!this.player.alive) return
+    this.player.alive = false
+    this.deathTime = this.elapsed; this.deathElapsed = 0
+    this.shake = this.reducedMotion ? 12 : 26; this.flashAlpha = 0.5 * this.flashMul()
+    if (this.settings.sound) getAudio().sfx('death')
+    if (this.settings.vibration && navigator.vibrate) navigator.vibrate([40, 40, 80])
+    var color = this.playerColor(), glow = this.playerGlow(), count = this.reducedMotion ? 30 : 60, i
+    for (i = 0; i < count; i++) {
+      var ang = this.rng() * TAU, spd = 60 + this.rng() * 280
+      this.particles.push({ x: this.player.x, y: this.player.y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd, life: 0.8 + this.rng() * 0.6, maxLife: 1.4, size: 1.5 + this.rng() * 3, color: this.rng() < 0.5 ? color : glow })
+    }
+  }
+
+  GameEngine.prototype.updateParticles = function (dt) {
+    for (var i = 0; i < this.particles.length; i++) {
+      var p = this.particles[i]; p.x += p.vx * dt; p.y += p.vy * dt
+      p.vx *= Math.pow(0.02, dt); p.vy *= Math.pow(0.02, dt); p.life -= dt
+    }
+    var kept = []; for (i = 0; i < this.particles.length; i++) if (this.particles[i].life > 0) kept.push(this.particles[i])
+    this.particles = kept
+  }
+  GameEngine.prototype.updateAmbient = function (dt) {
+    for (var i = 0; i < this.ambient.length; i++) {
+      var p = this.ambient[i]; p.x += p.vx * dt; p.y += p.vy * dt
+      if (p.x < 0) p.x += this.cw; if (p.x > this.cw) p.x -= this.cw
+      if (p.y < 0) p.y += this.ch; if (p.y > this.ch) p.y -= this.ch
+    }
+  }
+
+  // ===== rendering =====
+  GameEngine.prototype.render = function (dt) {
+    var ctx = this.ctx, now = performance.now()
+    ctx.save()
+    var grad = ctx.createLinearGradient(0, 0, 0, this.ch)
+    grad.addColorStop(0, this.theme.bgTop); grad.addColorStop(1, this.theme.bgBottom)
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, this.cw, this.ch)
+    if (now < this.effects.slowmoUntil) { ctx.fillStyle = 'rgba(80, 40, 120, 0.12)'; ctx.fillRect(0, 0, this.cw, this.ch) }
+    ctx.translate(this.shakeX, this.shakeY)
+    this.drawGrid(ctx); this.drawAmbient(ctx); this.drawArenaBorder(ctx)
+    this.drawPowerUps(ctx, now)
+    ctx.globalCompositeOperation = 'lighter'
+    for (var i = 0; i < this.lasers.length; i++) { if (now < this.lasers[i].bornAt) continue; this.drawLaser(ctx, this.lasers[i], now) }
+    ctx.globalCompositeOperation = 'source-over'
+    if (this.player.alive || this.deathElapsed < 0.5) this.drawPlayer(ctx, dt, now)
+    ctx.globalCompositeOperation = 'lighter'; this.drawParticles(ctx); ctx.globalCompositeOperation = 'source-over'
+    ctx.restore()
+    if (this.flashAlpha > 0.01) { ctx.fillStyle = 'rgba(255,255,255,' + this.flashAlpha + ')'; ctx.fillRect(0, 0, this.cw, this.ch) }
+    this.drawVignette(ctx)
+  }
+  GameEngine.prototype.drawGrid = function (ctx) {
+    var step = 36; ctx.lineWidth = 1; ctx.strokeStyle = this.theme.grid; ctx.beginPath()
+    for (var x = 0; x <= this.cw; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, this.ch) }
+    for (var y = 0; y <= this.ch; y += step) { ctx.moveTo(0, y); ctx.lineTo(this.cw, y) }
+    ctx.stroke(); ctx.strokeStyle = this.theme.gridGlow; ctx.beginPath()
+    for (x = this.arenaX; x <= this.arenaX + this.arenaW; x += step) { ctx.moveTo(x, this.arenaY); ctx.lineTo(x, this.arenaY + this.arenaH) }
+    for (y = this.arenaY; y <= this.arenaY + this.arenaH; y += step) { ctx.moveTo(this.arenaX, y); ctx.lineTo(this.arenaX + this.arenaW, y) }
+    ctx.stroke()
+  }
+  GameEngine.prototype.drawAmbient = function (ctx) {
+    ctx.globalCompositeOperation = 'lighter'
+    for (var i = 0; i < this.ambient.length; i++) { var p = this.ambient[i]; ctx.fillStyle = withAlpha(p.color, 0.5); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill() }
+    ctx.globalCompositeOperation = 'source-over'
+  }
+  GameEngine.prototype.drawArenaBorder = function (ctx) {
+    ctx.save(); ctx.strokeStyle = withAlpha(this.theme.accent, 0.5); ctx.lineWidth = 2
+    ctx.shadowColor = this.theme.accent; ctx.shadowBlur = 16
+    roundRect(ctx, this.arenaX, this.arenaY, this.arenaW, this.arenaH, 14); ctx.stroke(); ctx.restore()
+  }
+  GameEngine.prototype.drawPowerUps = function (ctx, now) {
+    for (var i = 0; i < this.powerUps.length; i++) {
+      var p = this.powerUps[i], expiring = p.expireAt - now < 2000
+      var blink = expiring ? 0.4 + 0.6 * Math.abs(Math.sin(now / 100)) : 1, yoff = Math.sin(p.bob) * 4
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'
+      var g = ctx.createRadialGradient(p.x, p.y + yoff, 0, p.x, p.y + yoff, p.radius * 3)
+      g.addColorStop(0, withAlpha(p.color, 0.5 * blink)); g.addColorStop(1, withAlpha(p.color, 0))
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y + yoff, p.radius * 3, 0, TAU); ctx.fill()
+      ctx.globalCompositeOperation = 'source-over'; ctx.translate(p.x, p.y + yoff); ctx.rotate(Math.PI / 4)
+      ctx.fillStyle = withAlpha(p.color, 0.9 * blink); ctx.shadowColor = p.color; ctx.shadowBlur = 16
+      ctx.fillRect(-p.radius * 0.7, -p.radius * 0.7, p.radius * 1.4, p.radius * 1.4)
+      ctx.rotate(-Math.PI / 4); ctx.fillStyle = 'rgba(255,255,255,0.9)'
+      ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+      var label = p.kind === 'shield' ? 'S' : p.kind === 'slowmo' ? 'T' : p.kind === 'phase' ? 'P' : '2×'
+      ctx.fillText(label, 0, 1); ctx.restore()
+    }
+  }
+  GameEngine.prototype.drawLaser = function (ctx, l, now) {
+    if (l.state === 'warning') { this.drawWarning(ctx, l, now); return }
+    if (l.state === 'fading') {
+      if (l.kind === 'shrink') { this.drawShrink(ctx, l, l.intensity * 0.4); return }
+      if (l.kind === 'mirror') { this.drawMirror(ctx, l, l.intensity * 0.4); return }
+      if (l.kind === 'sliding') { this.drawSliding(ctx, l, l.intensity * 0.4); return }
+      this.drawBeam(ctx, l, l.intensity * 0.5); return
+    }
+    if (l.kind === 'pulsing' && !l.pulseOn) { this.drawBeam(ctx, l, 0.12); return }
+    if (l.kind === 'wall') { this.drawWall(ctx, l, now); return }
+    if (l.kind === 'grid') { this.drawGridLaser(ctx, l); return }
+    if (l.kind === 'shrink') { this.drawShrink(ctx, l, 1); return }
+    if (l.kind === 'mirror') { this.drawMirror(ctx, l, 1); return }
+    if (l.kind === 'sliding') { this.drawSliding(ctx, l, 1); return }
+    this.drawBeam(ctx, l, 1)
+  }
+  GameEngine.prototype.drawWarning = function (ctx, l, now) {
+    var warnColor = this.theme.laserWarn, blinkSpeed = this.reduceFlash ? 160 : 90
+    var blink = 0.4 + 0.6 * Math.abs(Math.sin(now / blinkSpeed)); ctx.save()
+    if (l.kind === 'wall') {
+      var horizontal = l.pulsePeriod === 1, sc = l.gaps[0], sh = l.gaps[1]
+      ctx.fillStyle = withAlpha('#34d399', 0.08 + 0.06 * blink)
+      if (horizontal) { var lo = this.arenaY + (sc - sh) * this.arenaH, hi = this.arenaY + (sc + sh) * this.arenaH; ctx.fillRect(this.arenaX, lo, this.arenaW, hi - lo) }
+      else { var lo2 = this.arenaX + (sc - sh) * this.arenaW, hi2 = this.arenaX + (sc + sh) * this.arenaW; ctx.fillRect(lo2, this.arenaY, hi2 - lo2, this.arenaH) }
+      ctx.strokeStyle = withAlpha(warnColor, 0.25 * blink + 0.12); ctx.lineWidth = l.thickness + 6; ctx.shadowColor = warnColor; ctx.shadowBlur = 14; this.strokeWallPath(ctx, l, 1)
+      ctx.strokeStyle = withAlpha(warnColor, 0.6 * blink + 0.2); ctx.lineWidth = 2; ctx.shadowBlur = 8; this.strokeWallPath(ctx, l, 1); ctx.restore(); return
+    }
+    if ((l.kind === 'homing' || l.kind === 'stalker') && l.target) {
+      var tx = l.target.x, ty = l.target.y, rcolor = l.kind === 'stalker' ? '#f43f5e' : warnColor
+      ctx.strokeStyle = withAlpha(rcolor, 0.5 * blink + 0.2); ctx.lineWidth = 2; ctx.shadowColor = rcolor; ctx.shadowBlur = 12
+      ctx.beginPath(); ctx.arc(tx, ty, 26, 0, TAU); ctx.stroke(); ctx.beginPath(); ctx.arc(tx, ty, 14, 0, TAU); ctx.stroke()
+      ctx.beginPath(); ctx.moveTo(tx - 34, ty); ctx.lineTo(tx - 18, ty); ctx.moveTo(tx + 18, ty); ctx.lineTo(tx + 34, ty)
+      ctx.moveTo(tx, ty - 34); ctx.lineTo(tx, ty - 18); ctx.moveTo(tx, ty + 18); ctx.lineTo(tx, ty + 34); ctx.stroke(); ctx.restore(); return
+    }
+    if (l.kind === 'shrink') {
+      var frac = (l.gaps && l.gaps[0]) || 0.18
+      ctx.strokeStyle = withAlpha(warnColor, 0.4 * blink + 0.15); ctx.lineWidth = 2; ctx.setLineDash([8, 8])
+      ctx.strokeRect(this.arenaX + frac * this.arenaW, this.arenaY + frac * this.arenaH, this.arenaW * (1 - frac * 2), this.arenaH * (1 - frac * 2)); ctx.setLineDash([]); ctx.restore(); return
+    }
+    if (l.kind === 'mirror' || l.kind === 'sliding') {
+      ctx.strokeStyle = withAlpha(warnColor, 0.3 * blink + 0.1); ctx.lineWidth = l.thickness + 4; ctx.shadowColor = warnColor; ctx.shadowBlur = 12
+      if (l.kind === 'mirror') this.strokeMirrorPath(ctx, l)
+      else {
+        ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke()
+        if (l.gapWidth != null && l.gapPos != null) {
+          var horizontal = l.mirrorOffset === 1, gp = l.gapPos, gw = l.gapWidth
+          ctx.strokeStyle = withAlpha('#34d399', 0.3 * blink + 0.1); ctx.lineWidth = l.thickness + 2
+          if (horizontal) { var glo = this.arenaX + (gp - gw / 2) * this.arenaW, ghi = this.arenaX + (gp + gw / 2) * this.arenaW; ctx.fillStyle = withAlpha('#34d399', 0.1); ctx.fillRect(glo, l.a.y - 4, ghi - glo, 8) }
+          else { var glo2 = this.arenaY + (gp - gw / 2) * this.arenaH, ghi2 = this.arenaY + (gp + gw / 2) * this.arenaH; ctx.fillStyle = withAlpha('#34d399', 0.1); ctx.fillRect(l.a.x - 4, glo2, 8, ghi2 - glo2) }
+        }
+      }
+      ctx.restore(); return
+    }
+    ctx.strokeStyle = withAlpha(warnColor, 0.25 * blink + 0.1); ctx.lineWidth = l.thickness + 8; ctx.shadowColor = warnColor; ctx.shadowBlur = 14
+    if (l.kind === 'grid') this.strokeGridPath(ctx, l)
+    else { ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke() }
+    ctx.strokeStyle = withAlpha(warnColor, 0.7 * blink + 0.2); ctx.lineWidth = 2; ctx.shadowBlur = 8
+    if (l.kind === 'grid') this.strokeGridPath(ctx, l)
+    else { ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke() }
+    ctx.restore()
+  }
+  GameEngine.prototype.strokeWallPath = function (ctx, l, closeFrac) {
+    var horizontal = l.pulsePeriod === 1, sc = l.gaps[0], sh = l.gaps[1], maxClose = 0.5 - sh, close = closeFrac * maxClose
+    if (horizontal) { var topY = this.arenaY + close * this.arenaH, botY = this.arenaY + (1 - close) * this.arenaH; ctx.beginPath(); ctx.moveTo(this.arenaX, topY); ctx.lineTo(this.arenaX + this.arenaW, topY); ctx.moveTo(this.arenaX, botY); ctx.lineTo(this.arenaX + this.arenaW, botY); ctx.stroke() }
+    else { var leftX = this.arenaX + close * this.arenaW, rightX = this.arenaX + (1 - close) * this.arenaW; ctx.beginPath(); ctx.moveTo(leftX, this.arenaY); ctx.lineTo(leftX, this.arenaY + this.arenaH); ctx.moveTo(rightX, this.arenaY); ctx.lineTo(rightX, this.arenaY + this.arenaH); ctx.stroke() }
+  }
+  GameEngine.prototype.drawWall = function (ctx, l, now) {
+    var progress = clamp((now - l.warnUntil) / (l.activeUntil - l.warnUntil), 0, 1)
+    var eased = progress < 0.7 ? progress / 0.7 : 1; this.drawWallEdges(ctx, l, eased)
+  }
+  GameEngine.prototype.drawWallEdges = function (ctx, l, eased) {
+    var horizontal = l.pulsePeriod === 1, sc = l.gaps[0], sh = l.gaps[1], maxClose = 0.5 - sh, close = eased * maxClose, self = this
+    function drawEdge(x1, y1, x2, y2) {
+      ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.25); ctx.lineWidth = l.thickness + 14; ctx.shadowColor = l.color; ctx.shadowBlur = 24; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = l.color; ctx.lineWidth = l.thickness; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore()
+    }
+    if (horizontal) { var topY = this.arenaY + close * this.arenaH, botY = this.arenaY + (1 - close) * this.arenaH; drawEdge(this.arenaX, topY, this.arenaX + this.arenaW, topY); drawEdge(this.arenaX, botY, this.arenaX + this.arenaW, botY) }
+    else { var leftX = this.arenaX + close * this.arenaW, rightX = this.arenaX + (1 - close) * this.arenaW; drawEdge(leftX, this.arenaY, leftX, this.arenaY + this.arenaH); drawEdge(rightX, this.arenaY, rightX, this.arenaY + this.arenaH) }
+  }
+  GameEngine.prototype.strokeGridPath = function (ctx, l) {
+    var g = l.gaps, cols = g[0], rows = g[1], gapCol = g[2], gapRow = g[3], cw = this.arenaW / cols, ch = this.arenaH / rows, i
+    ctx.beginPath()
+    for (i = 0; i <= cols; i++) { if (i === gapCol || i === gapCol + 1) continue; var x = this.arenaX + i * cw; ctx.moveTo(x, this.arenaY); ctx.lineTo(x, this.arenaY + this.arenaH) }
+    for (i = 0; i <= rows; i++) { if (i === gapRow || i === gapRow + 1) continue; var y = this.arenaY + i * ch; ctx.moveTo(this.arenaX, y); ctx.lineTo(this.arenaX + this.arenaW, y) }
+    ctx.stroke()
+  }
+  GameEngine.prototype.drawGridLaser = function (ctx, l) {
+    var g = l.gaps, cols = g[0], rows = g[1], gapCol = g[2], gapRow = g[3], cw = this.arenaW / cols, ch = this.arenaH / rows, self = this
+    function drawLine(x1, y1, x2, y2) {
+      ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.22); ctx.lineWidth = l.thickness + 12; ctx.shadowColor = l.color; ctx.shadowBlur = 20; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = l.color; ctx.lineWidth = l.thickness; ctx.shadowBlur = 10; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore()
+    }
+    for (var i = 0; i <= cols; i++) { if (i === gapCol || i === gapCol + 1) continue; var x = this.arenaX + i * cw; drawLine(x, this.arenaY, x, this.arenaY + this.arenaH) }
+    for (var j = 0; j <= rows; j++) { if (j === gapRow || j === gapRow + 1) continue; var y = this.arenaY + j * ch; drawLine(this.arenaX, y, this.arenaX + this.arenaW, y) }
+  }
+  GameEngine.prototype.strokeMirrorPath = function (ctx, l) {
+    var horizontal = l.mirrorOffset === 1, f0 = l.gaps[0], f1 = l.gaps[1]
+    if (horizontal) { var y0 = this.arenaY + f0 * this.arenaH, y1 = this.arenaY + f1 * this.arenaH; ctx.beginPath(); ctx.moveTo(this.arenaX, y0); ctx.lineTo(this.arenaX + this.arenaW, y0); ctx.moveTo(this.arenaX, y1); ctx.lineTo(this.arenaX + this.arenaW, y1); ctx.stroke() }
+    else { var x0 = this.arenaX + f0 * this.arenaW, x1 = this.arenaX + f1 * this.arenaW; ctx.beginPath(); ctx.moveTo(x0, this.arenaY); ctx.lineTo(x0, this.arenaY + this.arenaH); ctx.moveTo(x1, this.arenaY); ctx.lineTo(x1, this.arenaY + this.arenaH); ctx.stroke() }
+  }
+  GameEngine.prototype.drawMirror = function (ctx, l, alpha) {
+    var horizontal = l.mirrorOffset === 1, f0 = l.gaps[0], f1 = l.gaps[1], self = this
+    function drawEdge(x1, y1, x2, y2) {
+      ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.22 * alpha); ctx.lineWidth = l.thickness + 14; ctx.shadowColor = l.color; ctx.shadowBlur = 22; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = withAlpha(l.color, 0.6 * alpha); ctx.lineWidth = l.thickness; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.85 * alpha) + ')'; ctx.lineWidth = Math.max(1.5, l.thickness * 0.4); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore()
+    }
+    if (horizontal) { var y0 = this.arenaY + f0 * this.arenaH, y1 = this.arenaY + f1 * this.arenaH; drawEdge(this.arenaX, y0, this.arenaX + this.arenaW, y0); drawEdge(this.arenaX, y1, this.arenaX + this.arenaW, y1) }
+    else { var x0 = this.arenaX + f0 * this.arenaW, x1 = this.arenaX + f1 * this.arenaW; drawEdge(x0, this.arenaY, x0, this.arenaY + this.arenaH); drawEdge(x1, this.arenaY, x1, this.arenaY + this.arenaH) }
+  }
+  GameEngine.prototype.drawSliding = function (ctx, l, alpha) {
+    var horizontal = l.mirrorOffset === 1, gp = l.gapPos != null ? l.gapPos : 0.5, gw = l.gapWidth != null ? l.gapWidth : 0.18, self = this
+    function drawSeg(x1, y1, x2, y2) {
+      ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.22 * alpha); ctx.lineWidth = l.thickness + 14; ctx.shadowColor = l.color; ctx.shadowBlur = 22; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = withAlpha(l.color, 0.6 * alpha); ctx.lineWidth = l.thickness; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = 'rgba(255,255,255,' + (0.85 * alpha) + ')'; ctx.lineWidth = Math.max(1.5, l.thickness * 0.4); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore()
+    }
+    if (horizontal) {
+      var y = l.a.y, lo = this.arenaX + (gp - gw / 2) * this.arenaW, hi = this.arenaX + (gp + gw / 2) * this.arenaW
+      drawSeg(this.arenaX, y, lo, y); drawSeg(hi, y, this.arenaX + this.arenaW, y)
+      ctx.save(); ctx.fillStyle = withAlpha('#34d399', 0.12 * alpha); ctx.fillRect(lo, y - l.thickness, hi - lo, l.thickness * 2); ctx.restore()
+    } else {
+      var x = l.a.x, lo2 = this.arenaY + (gp - gw / 2) * this.arenaH, hi2 = this.arenaY + (gp + gw / 2) * this.arenaH
+      drawSeg(x, this.arenaY, x, lo2); drawSeg(x, hi2, x, this.arenaY + this.arenaH)
+      ctx.save(); ctx.fillStyle = withAlpha('#34d399', 0.12 * alpha); ctx.fillRect(x - l.thickness, lo2, l.thickness * 2, hi2 - lo2); ctx.restore()
+    }
+  }
+  GameEngine.prototype.drawShrink = function (ctx, l, alpha) {
+    var frac = l.shrinkFrac || 0; if (frac <= 0.005) return
+    var left = this.arenaX + frac * this.arenaW, right = this.arenaX + (1 - frac) * this.arenaW
+    var top = this.arenaY + frac * this.arenaH, bottom = this.arenaY + (1 - frac) * this.arenaH, self = this
+    function drawEdge(x1, y1, x2, y2) {
+      ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.22 * alpha); ctx.lineWidth = l.thickness + 14; ctx.shadowColor = l.color; ctx.shadowBlur = 22; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke()
+      ctx.strokeStyle = withAlpha(l.color, 0.6 * alpha); ctx.lineWidth = l.thickness; ctx.shadowBlur = 12; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore()
+    }
+    drawEdge(left, top, right, top); drawEdge(left, bottom, right, bottom); drawEdge(left, top, left, bottom); drawEdge(right, top, right, bottom)
+  }
+  GameEngine.prototype.drawBeam = function (ctx, l, alpha) {
+    ctx.save(); ctx.strokeStyle = withAlpha(l.color, 0.22 * alpha); ctx.lineWidth = l.thickness + 16; ctx.shadowColor = l.color; ctx.shadowBlur = 22
+    ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke()
+    ctx.strokeStyle = withAlpha(l.color, 0.5 * alpha); ctx.lineWidth = l.thickness + 4; ctx.shadowBlur = 14; ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke()
+    ctx.strokeStyle = 'rgba(255,255,255,' + (0.9 * alpha) + ')'; ctx.lineWidth = Math.max(1.5, l.thickness * 0.4); ctx.shadowBlur = 6; ctx.beginPath(); ctx.moveTo(l.a.x, l.a.y); ctx.lineTo(l.b.x, l.b.y); ctx.stroke(); ctx.restore()
+  }
+  GameEngine.prototype.drawPlayer = function (ctx, dt, now) {
+    var p = this.player, color = this.playerColor(), glow = this.playerGlow(), effect = this.playerEffect()
+    var alive = p.alive, phase = now < this.effects.phaseUntil, t = now / 1000, i
+    if (effect === 'trail' || effect === 'spark') {
+      for (i = 0; i < p.trail.length; i++) { var tp = p.trail[i]; var a = (i / p.trail.length) * 0.5; ctx.fillStyle = withAlpha(glow, a); ctx.beginPath(); ctx.arc(tp.x, tp.y, p.radius * (i / p.trail.length) * 0.9, 0, TAU); ctx.fill() }
+    }
+    if (!alive) return
+    var pulse = effect === 'pulse' ? 1 + Math.sin(t * 6) * 0.12 : 1, r = p.radius * pulse, alpha = phase ? 0.5 : 1
+    if (this.flow > 5) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = withAlpha(glow, 0.6); ctx.lineWidth = 2.5; ctx.shadowColor = glow; ctx.shadowBlur = 10
+      ctx.beginPath(); ctx.arc(p.x, p.y, r + 6, -Math.PI / 2, -Math.PI / 2 + (this.flow / 100) * TAU); ctx.stroke(); ctx.restore()
+    }
+    if (this.effects.shield) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = withAlpha('#34d399', 0.8); ctx.lineWidth = 2.5; ctx.shadowColor = '#34d399'; ctx.shadowBlur = 14; ctx.beginPath(); ctx.arc(p.x, p.y, r + 8, 0, TAU); ctx.stroke(); ctx.restore()
+    }
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'
+    var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2)
+    grad.addColorStop(0, withAlpha(glow, 0.55 * alpha)); grad.addColorStop(0.5, withAlpha(glow, 0.18 * alpha)); grad.addColorStop(1, withAlpha(glow, 0))
+    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.2, 0, TAU); ctx.fill(); ctx.restore()
+    ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 18; ctx.fillStyle = withAlpha(color, alpha); ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, TAU); ctx.fill()
+    ctx.fillStyle = 'rgba(255,255,255,' + (0.9 * alpha) + ')'; ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.45, 0, TAU); ctx.fill(); ctx.restore()
+    if (effect === 'orbit') {
+      var ox = p.x + Math.cos(t * 3) * (r + 6), oy = p.y + Math.sin(t * 3) * (r + 6)
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = glow; ctx.shadowColor = glow; ctx.shadowBlur = 10; ctx.beginPath(); ctx.arc(ox, oy, 2.5, 0, TAU); ctx.fill(); ctx.restore()
+    }
+  }
+  GameEngine.prototype.drawParticles = function (ctx) {
+    for (var i = 0; i < this.particles.length; i++) { var p = this.particles[i]; var a = clamp(p.life / p.maxLife, 0, 1); ctx.fillStyle = withAlpha(p.color, a); ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, TAU); ctx.fill() }
+  }
+  GameEngine.prototype.drawVignette = function (ctx) {
+    var g = ctx.createRadialGradient(this.cw / 2, this.ch / 2, Math.min(this.cw, this.ch) * 0.35, this.cw / 2, this.ch / 2, Math.max(this.cw, this.ch) * 0.75)
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, this.theme.vignette); ctx.fillStyle = g; ctx.fillRect(0, 0, this.cw, this.ch)
+  }
+
+  global.LF.Engine = { GameEngine: GameEngine }
+})(window)
+
+  </script>
+  <script>
+// Laser Flow — clip recorder (canvas + audio → WebM)
+(function (global) {
+  'use strict'
+
+  function ClipRecorder() {
+    this.recorder = null
+    this.chunks = []
+    this.stream = null
+    this.recording = false
+  }
+
+  ClipRecorder.isSupported = function () {
+    return typeof MediaRecorder !== 'undefined' &&
+      typeof HTMLCanvasElement.prototype.captureStream === 'function'
+  }
+
+  ClipRecorder.prototype.start = function (canvas, audioStream) {
+    if (this.recording) return true
+    try {
+      var fps = 60
+      var canvasStream = canvas.captureStream(fps)
+      var tracks = canvasStream.getVideoTracks().slice()
+      if (audioStream) tracks = tracks.concat(audioStream.getAudioTracks())
+      this.stream = new MediaStream(tracks)
+      var mime = this.pickMime()
+      this.recorder = new MediaRecorder(this.stream, mime ? { mimeType: mime } : undefined)
+      this.chunks = []
+      var self = this
+      this.recorder.ondataavailable = function (e) { if (e.data && e.data.size > 0) self.chunks.push(e.data) }
+      this.recorder.start(250)
+      this.recording = true
+      return true
+    } catch (e) { this.recording = false; return false }
+  }
+
+  ClipRecorder.prototype.pickMime = function () {
+    var candidates = [
+      'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus',
+      'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm',
+    ]
+    for (var i = 0; i < candidates.length; i++) {
+      if (MediaRecorder.isTypeSupported(candidates[i])) return candidates[i]
+    }
+    return null
+  }
+
+  ClipRecorder.prototype.stop = function (cb) {
+    var self = this
+    if (!this.recorder || !this.recording) { if (cb) cb(null); return }
+    this.recorder.onstop = function () {
+      var type = self.recorder.mimeType || 'video/webm'
+      var blob = new Blob(self.chunks, { type: type })
+      self.recording = false
+      self.recorder = null
+      self.stream = null
+      if (cb) cb(blob)
+    }
+    try { this.recorder.stop() } catch (e) { if (cb) cb(null) }
+  }
+
+  ClipRecorder.prototype.cancel = function () {
+    if (this.recorder && this.recording) {
+      try { this.recorder.onstop = null; this.recorder.stop() } catch (e) {}
+    }
+    this.recording = false
+    this.recorder = null
+    this.stream = null
+    this.chunks = []
+  }
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob)
+    var a = document.createElement('a')
+    a.href = url; a.download = filename
+    document.body.appendChild(a); a.click(); document.body.removeChild(a)
+    setTimeout(function () { URL.revokeObjectURL(url) }, 4000)
+  }
+
+  global.LF.Recorder = { ClipRecorder: ClipRecorder, downloadBlob: downloadBlob }
+})(window)
+
+  </script>
+  <script>
+// Laser Flow — main app controller. Screen state machine + UI + event wiring.
+(function (global) {
+  'use strict'
+  var C = global.LF.Config
+  var S = global.LF.Storage
+  var getAudio = global.LF.Audio.getAudio
+  var Engine = global.LF.Engine.GameEngine
+  var ClipRecorder = global.LF.Recorder.ClipRecorder
+  var downloadBlob = global.LF.Recorder.downloadBlob
+  var fmt = C.formatTime
+  var TAU = Math.PI * 2
+
+  function withAlpha(hex, a) {
+    if (hex.indexOf('rgb') === 0) return hex
+    var h = hex.slice(1)
+    if (h.length === 3) h = h.split('').map(function (c) { return c + c }).join('')
+    return 'rgba(' + parseInt(h.slice(0,2),16) + ',' + parseInt(h.slice(2,4),16) + ',' + parseInt(h.slice(4,6),16) + ',' + a + ')'
+  }
+  function el(id) { return document.getElementById(id) }
+  function svg(name) {
+    var paths = {
+      play: '<path d="M8 5v14l11-7z"/>',
+      pause: '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+      sound: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+      mute: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>',
+      music: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+      musicOff: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/>',
+      vibrate: '<path d="m2 8 2 6-2 6"/><path d="m22 8-2 6 2 6"/><path d="M4 14h16"/>',
+      vibrateOff: '<path d="m2 8 2 6-2 6"/><path d="m22 8-2 6 2 6"/><path d="M4 14h16"/><line x1="2" y1="2" x2="22" y2="22"/>',
+      send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+      crown: '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+      trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+    }
+    return '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (paths[name] || '') + '</svg>'
+  }
+
+  function App() {
+    this.settings = S.loadSettings()
+    this.best = S.loadBestTimes()
+    this.unlocked = S.loadUnlockedAchievements()
+    this.screen = 'home'
+    this.dailyMode = false
+    this.dailySeed = C.getTodaySeed()
+    this.dailyBest = S.loadDailyBestLocal(this.dailySeed, this.settings.difficulty)
+    this.engine = null
+    this.recorder = null
+    this.clipBlob = null
+    this.firstRun = S.isFirstRun()
+    this.liveTime = 0
+    this.liveIntensity = 0
+    this.flow = 0
+    this.flowMult = 1
+    this.effects = { shield: false, slowmoUntil: 0, phaseUntil: 0, multiplierUntil: 0 }
+    this.result = null
+    this.newlyUnlocked = []
+    this.bgRaf = null
+    this.specialTimer = null
+    this.milestoneTimer = null
+    this.countdownTimers = []
+    this.clipSupported = ClipRecorder.isSupported()
+    this.isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window
+  }
+
+  App.prototype.init = function () {
+    var self = this
+    this.cacheEls()
+    this.renderHome()
+    this.renderSettings()
+    this.startBgAnimation()
+    this.attachGlobalEvents()
+    // hide loading
+    setTimeout(function () { el('loading').classList.add('hide') }, 200)
+    // audio unlock
+    var unlock = function () {
+      var audio = getAudio()
+      audio.resume(); audio.setSfxEnabled(self.settings.sound)
+      if (self.settings.music) { audio.setMusicEnabled(true); audio.startMusic(); audio.setIntensity(0.1) }
+      window.removeEventListener('pointerdown', unlock); window.removeEventListener('keydown', unlock)
+    }
+    window.addEventListener('pointerdown', unlock); window.addEventListener('keydown', unlock)
+    window.addEventListener('resize', function () { if (self.engine) self.engine.resize() })
+  }
+
+  App.prototype.cacheEls = function () {
+    this.els = {
+      home: el('screen-home'), settings: el('screen-settings'),
+      countdown: el('screen-countdown'), hud: el('hud'),
+      pause: el('screen-pause'), gameover: el('screen-gameover'),
+      bgCanvas: el('bg-canvas'), gameCanvas: el('game-canvas'),
+      watermark: el('watermark'), joyzone: el('joystick-zone'),
+      tutorial: el('tutorial-hint'),
+    }
+  }
+
+  // ---------- screen switching ----------
+  App.prototype.showScreen = function (name) {
+    this.screen = name
+    var map = { home: this.els.home, settings: this.els.settings, countdown: this.els.countdown, playing: this.els.hud, paused: this.els.pause, gameover: this.els.gameover }
+    this.els.home.classList.add('hidden')
+    this.els.settings.classList.add('hidden')
+    this.els.countdown.classList.add('hidden')
+    this.els.hud.classList.add('hidden')
+    this.els.pause.classList.add('hidden')
+    this.els.gameover.classList.add('hidden')
+    if (map[name]) map[name].classList.remove('hidden')
+    var gameActive = name === 'countdown' || name === 'playing' || name === 'paused' || name === 'gameover'
+    this.els.bgCanvas.classList.toggle('hidden', gameActive)
+    this.els.gameCanvas.classList.toggle('hidden', !gameActive)
+    this.els.watermark.classList.toggle('hidden', !(name === 'playing' || name === 'countdown'))
+    this.els.watermark.textContent = this.dailyMode ? 'DAILY · LASER FLOW' : 'LASER FLOW'
+    if (this.isTouch) this.els.joyzone.classList.toggle('hidden', name !== 'playing')
+    // audio intensity
+    var audio = getAudio()
+    if (name === 'playing') audio.setIntensity(0)
+    else if (name === 'countdown') audio.setIntensity(0.06)
+    else if (name === 'home' || name === 'settings') audio.setIntensity(0.12)
+    else if (name === 'gameover' || name === 'paused') audio.setIntensity(0.15)
+  }
+
+  // ---------- home rendering ----------
+  App.prototype.renderHome = function () {
+    var self = this, diff = C.DIFFICULTIES[this.settings.difficulty]
+    // diff dot
+    var dot = el('home-diff-dot'); dot.style.background = diff.color; dot.style.boxShadow = '0 0 12px ' + diff.color
+    // difficulty chips
+    var container = el('home-difficulty-chips'); container.innerHTML = ''
+    var order = ['easy', 'normal', 'hard', 'insane']
+    order.forEach(function (d) {
+      var cfg = C.DIFFICULTIES[d], active = self.settings.difficulty === d
+      var btn = document.createElement('button')
+      btn.className = 'diff-chip'; btn.textContent = cfg.name
+      if (active) { btn.style.borderColor = withAlpha(cfg.color, 0.7); btn.style.background = withAlpha(cfg.color, 0.14); btn.style.boxShadow = '0 0 16px ' + withAlpha(cfg.color, 0.35); btn.style.color = '#fff' }
+      btn.onclick = function () { self.updateSettings({ difficulty: d }); self.click(); self.renderHome() }
+      btn.onpointerenter = function () { self.hover() }
+      container.appendChild(btn)
+    })
+    el('home-best-diff').textContent = diff.name
+    el('home-best-time').textContent = fmt(this.best[this.settings.difficulty] || 0)
+    el('home-daily-best').textContent = fmt(this.dailyBest)
+    el('home-seed').textContent = this.dailySeed
+    this.renderToggles()
+  }
+
+  App.prototype.renderToggles = function () {
+    var self = this
+    function setup(id, key, onIcon, offIcon) {
+      var btn = el(id), on = self.settings[key]
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false')
+      btn.innerHTML = on ? svg(onIcon) : svg(offIcon)
+      btn.onclick = function () {
+        var patch = {}; patch[key] = !self.settings[key]
+        self.updateSettings(patch)
+        var audio = getAudio()
+        if (key === 'sound') { audio.setSfxEnabled(self.settings.sound); if (self.settings.sound) audio.sfx('click') }
+        else if (key === 'music') { audio.resume(); audio.setMusicEnabled(self.settings.music); if (self.settings.music) audio.startMusic() }
+        else if (key === 'vibration') { if (self.settings.vibration && navigator.vibrate) navigator.vibrate(20) }
+        if (self.settings.sound && key !== 'sound') audio.sfx('click')
+        self.renderToggles()
+      }
+    }
+    setup('btn-sound', 'sound', 'sound', 'mute')
+    setup('btn-music', 'music', 'music', 'musicOff')
+    setup('btn-vibration', 'vibration', 'vibrate', 'vibrateOff')
+  }
+
+  // ---------- settings rendering ----------
+  App.prototype.renderSettings = function () {
+    var self = this, c = el('settings-content'); c.innerHTML = ''
+    var s = this.settings
+
+    function section(title, hint) {
+      var sec = document.createElement('section'); sec.className = 'settings-section'
+      var h = document.createElement('h3'); h.textContent = title
+      var p = hint ? document.createElement('p') : null; if (p) { p.className = 'hint'; p.textContent = hint }
+      sec.appendChild(h); if (p) sec.appendChild(p)
+      c.appendChild(sec); return sec
+    }
+    function chipGrid(values, current, onChange, blurb) {
+      var wrap = document.createElement('div'); wrap.className = blurb ? 'chip-grid-blurb' : 'chip-grid'
+      values.forEach(function (v) {
+        var btn = document.createElement('button')
+        btn.className = 'opt-chip' + (blurb ? ' opt-chip-blurb' : '')
+        btn.textContent = v.label
+        if (blurb && v.blurb) { var b = document.createElement('span'); b.className = 'blurb'; b.textContent = v.blurb; btn.appendChild(b) }
+        var active = current === v.id
+        if (active && v.color) { btn.style.borderColor = withAlpha(v.color, 0.7); btn.style.background = withAlpha(v.color, 0.12); btn.style.boxShadow = '0 0 16px ' + withAlpha(v.color, 0.3); btn.style.color = '#fff' }
+        btn.onclick = function () { onChange(v.id) }; btn.onpointerenter = function () { self.hover() }
+        wrap.appendChild(btn)
+      })
+      return wrap
+    }
+
+    // Difficulty
+    var s1 = section('Difficulty', 'Spawn rate, warning time, ramp speed')
+    s1.appendChild(chipGrid(
+      Object.keys(C.DIFFICULTIES).map(function (d) { return { id: d, label: C.DIFFICULTIES[d].name, blurb: C.DIFFICULTIES[d].blurb, color: C.DIFFICULTIES[d].color } }),
+      s.difficulty, function (v) { self.updateSettings({ difficulty: v }); self.click(); self.renderSettings() }, true
+    ))
+    // Arena size
+    var s2 = section('Arena Size', 'Bigger arena = more room to maneuver')
+    s2.appendChild(chipGrid(Object.keys(C.ARENA_SIZES).map(function (k) { return { id: k, label: C.ARENA_SIZES[k].name } }), s.arenaSize, function (v) { self.updateSettings({ arenaSize: v }); self.click(); self.renderSettings() }))
+    // Laser speed
+    var s3 = section('Laser Speed', 'Rotation & wall closing speed')
+    s3.appendChild(chipGrid(Object.keys(C.LASER_SPEEDS).map(function (k) { return { id: k, label: C.LASER_SPEEDS[k].name } }), s.laserSpeed, function (v) { self.updateSettings({ laserSpeed: v }); self.click(); self.renderSettings() }))
+    // Skins
+    var s4 = section('Player Skin', 'Color & visual effect')
+    var skinGrid = document.createElement('div'); skinGrid.className = 'skin-grid'
+    C.SKIN_LIST.forEach(function (skin) {
+      var active = s.skin === skin.id
+      var dc = skin.id === 'custom' ? s.customColor : skin.color
+      var dg = skin.id === 'custom' ? s.customColor : skin.glow
+      var card = document.createElement('button'); card.className = 'skin-card'
+      if (active) { card.style.borderColor = withAlpha(dc, 0.7); card.style.background = withAlpha(dc, 0.12); card.style.boxShadow = '0 0 16px ' + withAlpha(dc, 0.3) }
+      card.onclick = function () { self.updateSettings({ skin: skin.id }); self.click(); self.renderSettings() }
+      card.onpointerenter = function () { self.hover() }
+      var dot = document.createElement('span'); dot.className = 'skin-dot'; dot.style.background = withAlpha(dc, 0.9); dot.style.boxShadow = '0 0 12px ' + dg
+      dot.innerHTML = '<span class="skin-dot-inner"></span>'
+      var info = document.createElement('span'); info.style.minWidth = '0'
+      info.innerHTML = '<span class="skin-name">' + skin.name + '</span><span class="skin-desc">' + skin.description + '</span>'
+      card.appendChild(dot); card.appendChild(info)
+      if (active) { var chk = document.createElement('span'); chk.className = 'skin-check'; chk.style.color = dc; chk.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; card.appendChild(chk) }
+      skinGrid.appendChild(card)
+    })
+    s4.appendChild(skinGrid)
+    // custom color picker
+    if (s.skin === 'custom') {
+      var row = document.createElement('div'); row.className = 'custom-color-row'
+      var label = document.createElement('label'); label.textContent = 'Custom color'
+      var inp = document.createElement('input'); inp.type = 'color'; inp.value = s.customColor
+      inp.onchange = function () { self.updateSettings({ customColor: inp.value }); self.click(); self.renderSettings() }
+      var hex = document.createElement('span'); hex.className = 'custom-color-hex'; hex.textContent = s.customColor.toUpperCase()
+      var swatchRow = document.createElement('div'); swatchRow.className = 'swatch-row'
+      ;['#22d3ee','#f472b6','#a3e635','#fbbf24','#a855f7','#fb7185','#34d399','#38bdf8'].forEach(function (col) {
+        var sw = document.createElement('button'); sw.className = 'swatch'; sw.style.background = col
+        sw.onclick = function () { self.updateSettings({ customColor: col }); self.click(); self.renderSettings() }
+        swatchRow.appendChild(sw)
+      })
+      row.appendChild(label); row.appendChild(inp); row.appendChild(hex); row.appendChild(swatchRow)
+      s4.appendChild(row)
+    }
+    // Themes
+    var s5 = section('Arena Theme', 'Colors, lighting & background vibe')
+    var themeGrid = document.createElement('div'); themeGrid.className = 'theme-grid'
+    C.THEME_LIST.forEach(function (theme) {
+      var active = s.theme === theme.id
+      var card = document.createElement('button'); card.className = 'theme-card'
+      if (active) { card.style.borderColor = withAlpha(theme.accent, 0.7); card.style.boxShadow = '0 0 16px ' + withAlpha(theme.accent, 0.3) }
+      card.onclick = function () { self.updateSettings({ theme: theme.id }); self.click(); self.renderSettings(); self.startBgAnimation() }
+      card.onpointerenter = function () { self.hover() }
+      var strip = document.createElement('div'); strip.className = 'theme-strip'; strip.style.background = 'linear-gradient(135deg, ' + theme.bgTop + ', ' + theme.bgBottom + ')'
+      theme.lasers.forEach(function (col) { var b = document.createElement('span'); b.className = 'theme-strip-bar'; b.style.background = col; b.style.boxShadow = '0 0 8px ' + col; strip.appendChild(b) })
+      var nm = document.createElement('div'); nm.className = 'theme-name'; nm.textContent = theme.name
+      if (active) { var chk = document.createElement('span'); chk.style.color = theme.accent; chk.innerHTML = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'; nm.appendChild(chk) }
+      card.appendChild(strip); card.appendChild(nm); themeGrid.appendChild(card)
+    })
+    s5.appendChild(themeGrid)
+    // Controls
+    var s6 = section('Controls', 'Touch sensitivity for mobile joystick')
+    var cr = document.createElement('div'); cr.className = 'control-row'
+    cr.innerHTML = '<div class="label-line"><span class="control-label">Joystick Sensitivity</span><span class="control-value">' + s.joystickSensitivity.toFixed(1) + '×</span></div>'
+    var range = document.createElement('input'); range.type = 'range'; range.min = '0.5'; range.max = '1.5'; range.step = '0.1'; range.value = s.joystickSensitivity
+    range.oninput = function () { self.updateSettings({ joystickSensitivity: parseFloat(range.value) }); cr.querySelector('.control-value').textContent = parseFloat(range.value).toFixed(1) + '×' }
+    cr.appendChild(range)
+    var rl = document.createElement('div'); rl.className = 'range-labels'; rl.innerHTML = '<span>Slow</span><span>Normal</span><span>Fast</span>'; cr.appendChild(rl)
+    s6.appendChild(cr)
+    // Accessibility
+    var s7 = section('Accessibility', 'Reduce flashing and motion for comfort')
+    function toggleRow(label, hint, key, color) {
+      var active = self.settings[key]
+      var btn = document.createElement('button'); btn.className = 'toggle-row'
+      if (active) { btn.style.borderColor = withAlpha(color, 0.6); btn.style.background = withAlpha(color, 0.1) }
+      btn.innerHTML = '<span><span class="toggle-label">' + label + '</span><span class="toggle-hint">' + hint + '</span></span>'
+      var sw = document.createElement('span'); sw.className = 'switch'; sw.style.background = active ? color : 'rgba(255,255,255,0.15)'
+      if (active) sw.style.boxShadow = '0 0 10px ' + withAlpha(color, 0.5)
+      var knob = document.createElement('span'); knob.className = 'switch-knob'; knob.style.transform = active ? 'translateX(22px)' : 'translateX(2px)'; sw.appendChild(knob)
+      btn.appendChild(sw)
+      btn.onclick = function () { var patch = {}; patch[key] = !self.settings[key]; self.updateSettings(patch); self.click(); self.renderSettings() }
+      return btn
+    }
+    s7.appendChild(toggleRow('Reduce Flash', 'Softer warning blinks, death & event flashes', 'reduceFlash', '#fbbf24'))
+    var sp = document.createElement('div'); sp.style.height = '10px'; s7.appendChild(sp)
+    s7.appendChild(toggleRow('Reduced Motion', 'Less camera shake & fewer particles', 'reducedMotion', '#a855f7'))
+  }
+
+  // ---------- background animation (menu) ----------
+  App.prototype.startBgAnimation = function () {
+    var self = this
+    if (this.bgRaf) cancelAnimationFrame(this.bgRaf)
+    var canvas = this.els.bgCanvas, ctx = canvas.getContext('2d')
+    var w = 0, h = 0, dpr = 1, beams = [], dots = []
+    function resize() {
+      var rect = canvas.getBoundingClientRect(); w = rect.width; h = rect.height
+      dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.floor(w * dpr); canvas.height = Math.floor(h * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      var theme = C.THEMES[self.settings.theme]
+      var beamCount = Math.max(4, Math.min(8, Math.round(w / 220)))
+      beams = []
+      for (var i = 0; i < beamCount; i++) beams.push({ x: Math.random() * w, y: Math.random() * h, angle: Math.random() * TAU, speed: 0.15 + Math.random() * 0.35, len: Math.max(w, h) * 1.4, thick: 1.5 + Math.random() * 2.5, color: theme.lasers[Math.floor(Math.random() * theme.lasers.length)], phase: Math.random() * TAU })
+      dots = []
+      for (var j = 0; j < 60; j++) dots.push({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10, r: 0.5 + Math.random() * 1.8 })
+    }
+    resize()
+    var last = performance.now()
+    function draw(now) {
+      var dt = Math.min(0.05, (now - last) / 1000); last = now
+      var theme = C.THEMES[self.settings.theme]
+      var g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, theme.bgTop); g.addColorStop(1, theme.bgBottom)
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h)
+      ctx.strokeStyle = theme.grid; ctx.lineWidth = 1; ctx.beginPath()
+      for (var x = 0; x <= w; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, h) }
+      for (var y = 0; y <= h; y += 40) { ctx.moveTo(0, y); ctx.lineTo(w, y) }
+      ctx.stroke()
+      ctx.globalCompositeOperation = 'lighter'
+      for (var i = 0; i < dots.length; i++) {
+        var d = dots[i]; d.x += d.vx * dt; d.y += d.vy * dt
+        if (d.x < 0) d.x += w; if (d.x > w) d.x -= w; if (d.y < 0) d.y += h; if (d.y > h) d.y -= h
+        ctx.fillStyle = withAlpha(theme.particle, 0.5); ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, TAU); ctx.fill()
+      }
+      for (i = 0; i < beams.length; i++) {
+        var b = beams[i]; b.phase += b.speed * dt
+        var ang = b.angle + Math.sin(b.phase) * 0.6
+        var ex = b.x + Math.cos(ang) * b.len, ey = b.y + Math.sin(ang) * b.len
+        var sx = b.x - Math.cos(ang) * b.len, sy = b.y - Math.sin(ang) * b.len
+        var pulse = 0.5 + 0.5 * Math.sin(b.phase * 1.7)
+        ctx.strokeStyle = withAlpha(b.color, 0.05 + 0.06 * pulse); ctx.lineWidth = b.thick + 10; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke()
+        ctx.strokeStyle = withAlpha(b.color, 0.18 + 0.18 * pulse); ctx.lineWidth = b.thick; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke()
+      }
+      ctx.globalCompositeOperation = 'source-over'
+      var vg = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75)
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, theme.vignette); ctx.fillStyle = vg; ctx.fillRect(0, 0, w, h)
+      self.bgRaf = requestAnimationFrame(draw)
+    }
+    self.bgRaf = requestAnimationFrame(draw)
+  }
+
+  // ---------- sound helpers ----------
+  App.prototype.click = function () { if (this.settings.sound) getAudio().sfx('click') }
+  App.prototype.hover = function () { if (this.settings.sound) getAudio().sfx('hover') }
+  App.prototype.back = function () { if (this.settings.sound) getAudio().sfx('back') }
+
+  App.prototype.updateSettings = function (patch) {
+    var next = Object.assign({}, this.settings, patch)
+    this.settings = next; S.saveSettings(next)
+    if (patch.difficulty || patch.theme) {
+      this.dailyBest = S.loadDailyBestLocal(this.dailySeed, this.settings.difficulty)
+      this.renderHome()
+    }
+  }
+
+  // ---------- event wiring ----------
+  App.prototype.attachGlobalEvents = function () {
+    var self = this
+    el('btn-customize').onclick = function () { self.click(); self.showScreen('settings') }
+    el('btn-start').onclick = function () { self.beginRun(false) }
+    el('btn-daily').onclick = function () { self.beginRun(true) }
+    el('btn-settings-back').onclick = function () { self.back(); self.showScreen('home') }
+    el('btn-pause').onclick = function () { self.handlePause() }
+    el('btn-resume').onclick = function () { self.click(); if (self.engine) self.engine.resume(); self.showScreen('playing') }
+    el('btn-pause-settings').onclick = function () { self.click(); self.cleanupRun(); self.showScreen('settings') }
+    el('btn-pause-home').onclick = function () { self.back(); self.cleanupRun(); self.dailyMode = false; self.showScreen('home') }
+    el('btn-replay').onclick = function () { self.handleReplay() }
+    el('btn-go-settings').onclick = function () { self.click(); self.cleanupRun(); self.showScreen('settings') }
+    el('btn-go-home').onclick = function () { self.back(); self.cleanupRun(); self.dailyMode = false; self.showScreen('home') }
+    el('btn-save-clip').onclick = function () { self.handleSaveClip() }
+    if (this.isTouch) this.attachJoystick()
+  }
+
+  // ---------- joystick ----------
+  App.prototype.attachJoystick = function () {
+    var self = this, zone = this.els.joyzone, radius = 60, touchId = null, origin = { x: 0, y: 0 }
+    var baseEl = null, knobEl = null
+    function start(e) {
+      if (touchId != null) return
+      var t = e.changedTouches[0]; touchId = t.identifier
+      var rect = zone.getBoundingClientRect()
+      origin = { x: t.clientX - rect.left, y: t.clientY - rect.top }
+      baseEl = document.createElement('div'); baseEl.className = 'joy-base'
+      baseEl.style.left = origin.x + 'px'; baseEl.style.top = origin.y + 'px'
+      knobEl = document.createElement('div'); knobEl.className = 'joy-knob'
+      baseEl.appendChild(knobEl); zone.appendChild(baseEl)
+      e.preventDefault()
+    }
+    function move(e) {
+      if (touchId == null) return
+      for (var i = 0; i < e.changedTouches.length; i++) {
+        var t = e.changedTouches[i]; if (t.identifier !== touchId) continue
+        var rect = zone.getBoundingClientRect()
+        var dx = t.clientX - rect.left - origin.x, dy = t.clientY - rect.top - origin.y
+        var dist = Math.hypot(dx, dy), clamped = Math.min(dist, radius), ang = Math.atan2(dy, dx)
+        if (knobEl) knobEl.style.transform = 'translate(calc(-50% + ' + (Math.cos(ang) * clamped) + 'px), calc(-50% + ' + (Math.sin(ang) * clamped) + 'px))'
+        if (self.engine) self.engine.setJoystick((clamped / radius) * Math.cos(ang), (clamped / radius) * Math.sin(ang))
+        e.preventDefault()
+      }
+    }
+    function end(e) {
+      for (var i = 0; i < e.changedTouches.length; i++) { if (e.changedTouches[i].identifier !== touchId) continue; touchId = null; if (baseEl) baseEl.remove(); if (self.engine) self.engine.setJoystick(0, 0); e.preventDefault() }
+    }
+    zone.addEventListener('touchstart', start, { passive: false })
+    zone.addEventListener('touchmove', move, { passive: false })
+    zone.addEventListener('touchend', end, { passive: false })
+    zone.addEventListener('touchcancel', end, { passive: false })
+  }
+
+  // ---------- run lifecycle ----------
+  App.prototype.beginRun = function (daily) {
+    this.click(); getAudio().resume()
+    var seed = C.getTodaySeed()
+    this.dailyMode = daily; this.dailySeed = seed
+    this.liveTime = 0; this.liveIntensity = 0; this.flow = 0; this.flowMult = 1
+    this.effects = { shield: false, slowmoUntil: 0, phaseUntil: 0, multiplierUntil: 0 }
+    this.result = null; this.newlyUnlocked = []; this.clipBlob = null
+    this.createEngine()
+    this.startCountdown()
+  }
+
+  App.prototype.createEngine = function () {
+    if (this.engine) { this.engine.destroy(); this.engine = null }
+    var self = this
+    var seed = this.dailyMode ? this.dailySeed : undefined
+    this.engine = new Engine(this.els.gameCanvas, this.settings, {
+      onDeath: function (time, stats) {
+        if (self.recorder && self.recorder.recording) self.recorder.stop(function (blob) { self.clipBlob = blob })
+        var diff = self.settings.difficulty, isDaily = self.dailyMode, runSeed = self.dailyMode ? self.dailySeed : undefined
+        var isNewBest = false
+        if (isDaily && runSeed) { var r = S.saveDailyBestLocal(runSeed, diff, time); isNewBest = r.isNewBest; self.dailyBest = S.loadDailyBestLocal(runSeed, diff) }
+        else { var r2 = S.recordBest(diff, time); self.best = r2.times; isNewBest = r2.isNewBest }
+        var fullStats = { time: time, flowMax: stats.flowMax, nearMisses: stats.nearMisses, powerUpsUsed: stats.powerUpsUsed, specialsCleared: stats.specialsCleared }
+        var newly = []
+        C.ACHIEVEMENTS.forEach(function (a) { if (!self.unlocked[a.id] && a.check(fullStats, self.settings)) { self.unlocked[a.id] = true; newly.push(a) } })
+        S.saveUnlockedAchievements(self.unlocked)
+        self.newlyUnlocked = newly
+        self.result = { time: time, difficulty: diff, isNewBest: isNewBest, stats: fullStats, daily: isDaily, seed: runSeed }
+        getAudio().setIntensity(0.15)
+        self.renderGameOver()
+        self.showScreen('gameover')
+      },
+      onTime: function (t) { self.liveTime = t; el('hud-time').textContent = fmt(t) },
+      onIntensity: function (v) { self.liveIntensity = v; getAudio().setIntensity(v); self.updateIntensityBar() },
+      onSpecial: function (label) { self.showSpecial(label) },
+      onFlow: function (f, m) { self.flow = f; self.flowMult = m; self.updateFlowMeter() },
+      onPowerUp: function (active) { self.effects = active; self.updatePowerBadges() },
+      onMilestone: function (seconds) { self.showMilestone(seconds) },
+      onPauseRequest: function () { if (self.screen === 'playing') self.handlePause() },
+    }, seed)
+    requestAnimationFrame(function () { if (self.engine) self.engine.resize() })
+  }
+
+  App.prototype.startCountdown = function () {
+    var self = this, audio = getAudio()
+    this.showScreen('countdown')
+    var cd = el('countdown-text'), n = 3
+    function show(v) { cd.textContent = v === 0 ? 'GO!' : String(v); cd.classList.toggle('go', v === 0); cd.classList.remove('cd-enter'); void cd.offsetWidth; cd.classList.add('cd-enter') }
+    show(3); if (this.settings.sound) audio.sfx('countdown')
+    this.countdownTimers.push(setTimeout(function () { show(2); if (self.settings.sound) audio.sfx('countdown') }, 900))
+    this.countdownTimers.push(setTimeout(function () { show(1); if (self.settings.sound) audio.sfx('countdown') }, 1800))
+    this.countdownTimers.push(setTimeout(function () { show(0); if (self.settings.sound) audio.sfx('go') }, 2700))
+    this.countdownTimers.push(setTimeout(function () { self.beginPlay() }, 3500))
+  }
+
+  App.prototype.beginPlay = function () {
+    if (this.settings.sound) getAudio().sfx('start')
+    if (this.engine) this.engine.start()
+    // recorder
+    if (this.clipSupported && !this.recorder) this.recorder = new ClipRecorder()
+    if (this.recorder) this.recorder.start(this.els.gameCanvas, getAudio().getStream())
+    if (this.firstRun) { S.markFirstRunDone(); this.firstRun = false; this.showTutorial() }
+    this.resetHud()
+    this.showScreen('playing')
+  }
+
+  App.prototype.resetHud = function () {
+    var diff = C.DIFFICULTIES[this.settings.difficulty]
+    el('hud-diff-dot').style.background = diff.color; el('hud-diff-dot').style.boxShadow = '0 0 8px ' + diff.color
+    el('hud-diff-name').textContent = diff.name.toUpperCase(); el('hud-diff-name').style.color = diff.color
+    var bestT = this.dailyMode ? this.dailyBest : (this.best[this.settings.difficulty] || 0)
+    el('hud-best').textContent = 'BEST ' + fmt(bestT)
+    el('hud-time').textContent = '00:00.00'
+    this.updateIntensityBar(); this.updateFlowMeter(); this.updatePowerBadges()
+  }
+
+  App.prototype.updateIntensityBar = function () {
+    var diff = C.DIFFICULTIES[this.settings.difficulty]
+    var bar = el('hud-intensity')
+    bar.style.width = Math.round(this.liveIntensity * 100) + '%'
+    bar.style.background = 'linear-gradient(90deg, ' + diff.color + ', #f43f5e)'
+  }
+  App.prototype.updateFlowMeter = function () {
+    var color = this.flowMult >= 4 ? '#f43f5e' : this.flowMult >= 3 ? '#fbbf24' : this.flowMult >= 2 ? '#a855f7' : '#22d3ee'
+    el('flow-mult').textContent = '×' + this.flowMult; el('flow-mult').style.color = color
+    var bar = el('flow-bar')
+    bar.style.height = this.flow + '%'
+    bar.style.background = 'linear-gradient(0deg, ' + color + ', ' + withAlpha(color, 0.8) + ')'
+    bar.style.boxShadow = '0 0 12px ' + color
+  }
+  App.prototype.updatePowerBadges = function () {
+    var now = performance.now(), c = el('powerup-badges'); c.innerHTML = ''
+    var self = this
+    function badge(label, color) {
+      var d = document.createElement('div'); d.className = 'pu-badge'; d.textContent = label
+      d.style.background = withAlpha(color, 0.18); d.style.border = '1.5px solid ' + withAlpha(color, 0.7); d.style.color = color; d.style.boxShadow = '0 0 12px ' + withAlpha(color, 0.4)
+      c.appendChild(d)
+    }
+    if (this.effects.shield) badge('S', C.POWER_UP_META.shield.color)
+    if (now < this.effects.slowmoUntil) badge('T', C.POWER_UP_META.slowmo.color)
+    if (now < this.effects.phaseUntil) badge('P', C.POWER_UP_META.phase.color)
+    if (now < this.effects.multiplierUntil) badge('2×', C.POWER_UP_META.multiplier.color)
+  }
+  App.prototype.showSpecial = function (label) {
+    var self = this, l = el('special-label')
+    l.textContent = label; l.classList.remove('hidden')
+    if (this.specialTimer) clearTimeout(this.specialTimer)
+    this.specialTimer = setTimeout(function () { l.classList.add('hidden') }, 1500)
+  }
+  App.prototype.showMilestone = function (seconds) {
+    var self = this, m = el('milestone')
+    m.innerHTML = '<div class="ms-num">' + seconds + 's</div><div class="ms-label" style="color:' + C.DIFFICULTIES[this.settings.difficulty].color + '">SURVIVED</div>'
+    m.classList.remove('hidden')
+    if (this.milestoneTimer) clearTimeout(this.milestoneTimer)
+    this.milestoneTimer = setTimeout(function () { m.classList.add('hidden') }, 1600)
+  }
+  App.prototype.showTutorial = function () {
+    var t = el('tutorial-hint')
+    el('tutorial-main').innerHTML = this.isTouch ? 'Drag anywhere to move' : 'Move with <span style="color:#22d3ee">WASD</span> / <span style="color:#22d3ee">Arrows</span>'
+    t.classList.remove('hidden')
+    setTimeout(function () { t.classList.add('hidden') }, 4200)
+  }
+
+  App.prototype.handlePause = function () {
+    if (this.screen !== 'playing') return
+    if (this.engine) this.engine.pause()
+    getAudio().setIntensity(0.08)
+    this.click(); this.showScreen('paused')
+  }
+  App.prototype.handleReplay = function () {
+    this.click(); this.cleanupRun()
+    this.liveTime = 0; this.liveIntensity = 0; this.flow = 0; this.flowMult = 1
+    this.effects = { shield: false, slowmoUntil: 0, phaseUntil: 0, multiplierUntil: 0 }
+    this.result = null; this.newlyUnlocked = []; this.clipBlob = null
+    this.createEngine(); this.startCountdown()
+  }
+  App.prototype.cleanupRun = function () {
+    if (this.recorder) { this.recorder.cancel() }
+    this.clipBlob = null
+    this.countdownTimers.forEach(function (t) { clearTimeout(t) }); this.countdownTimers = []
+  }
+  App.prototype.handleSaveClip = function () {
+    var blob = this.clipBlob; if (!blob) return
+    var label = el('save-clip-label'); label.textContent = 'Saving...'
+    var tag = this.result && this.result.daily ? 'daily' : (this.result && this.result.difficulty || 'run')
+    downloadBlob(blob, 'laser-flow-' + tag + '-' + Math.round(this.result ? this.result.time : 0) + 's.webm')
+    setTimeout(function () { label.textContent = 'Save Clip' }, 600)
+  }
+
+  // ---------- game over rendering ----------
+  App.prototype.renderGameOver = function () {
+    var self = this, r = this.result, diff = C.DIFFICULTIES[r.difficulty], shownBest = Math.max(r.daily && r.seed ? S.loadDailyBestLocal(r.seed, r.difficulty) : (this.best[r.difficulty] || 0), r.time)
+    el('go-label').textContent = r.daily ? 'DAILY SURVIVAL' : 'SURVIVAL TIME'
+    var timeEl = el('go-time'); timeEl.textContent = fmt(r.time); timeEl.style.textShadow = '0 0 22px ' + withAlpha(diff.color, 0.6)
+    el('go-newbest').classList.toggle('hidden', !r.isNewBest)
+    el('go-msg').textContent = this.encourage(r.time, r.isNewBest)
+    var panel = el('gameover-panel'); panel.style.borderColor = withAlpha(diff.color, 0.35)
+    // stats
+    var st = C.POWER_UP_META
+    var stats = el('go-stats'); stats.innerHTML = ''
+    function stat(icon, label, val) { var d = document.createElement('div'); d.className = 'stat-card'; d.innerHTML = '<div class="stat-icon">' + icon + '<span>' + label + '</span></div><div class="stat-val">' + val + '</div>'; stats.appendChild(d) }
+    stat('<svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>', 'BEST', fmt(shownBest))
+    stat('<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + diff.color + ';box-shadow:0 0 8px ' + diff.color + '"></span>', 'DIFFICULTY', diff.name)
+    stat('<span style="color:#f0abfc;font-size:14px">✨</span>', 'MAX FLOW', Math.round(r.stats.flowMax) + '%')
+    stat('<span style="color:#fbbf24;font-size:14px">⚡</span>', 'NEAR MISSES', String(r.stats.nearMisses))
+    stat('<span style="font-size:14px">🛡️</span>', 'POWER-UPS', String(r.stats.powerUpsUsed))
+    stat('<span style="font-size:14px">🌀</span>', 'SPECIALS', String(r.stats.specialsCleared))
+    // achievements
+    var ach = el('go-achievements')
+    if (this.newlyUnlocked.length > 0) {
+      ach.classList.remove('hidden')
+      ach.innerHTML = '<div class="ach-title">ACHIEVEMENT UNLOCKED</div>'
+      var list = document.createElement('div'); list.className = 'ach-list'
+      this.newlyUnlocked.forEach(function (a) { var c = document.createElement('span'); c.className = 'ach-chip'; c.title = a.description; c.innerHTML = '<span>' + a.icon + '</span>' + a.name; list.appendChild(c) })
+      ach.appendChild(list)
+    } else ach.classList.add('hidden')
+    // daily panel
+    var dp = el('go-daily-panel')
+    if (r.daily && r.seed) { dp.classList.remove('hidden'); this.renderDailyPanel(dp, r.seed, r.difficulty, r.time) }
+    else dp.classList.add('hidden')
+    // save clip
+    el('btn-save-clip').classList.toggle('hidden', !this.clipSupported)
+    el('save-clip-label').textContent = 'Save Clip'
+  }
+
+  App.prototype.renderDailyPanel = function (container, seed, difficulty, time) {
+    var self = this
+    container.className = 'daily-panel'
+    container.innerHTML = ''
+    var head = document.createElement('div'); head.className = 'daily-panel-head'
+    head.innerHTML = svg('trophy') + '<span>YOUR DAILY RUNS · ' + difficulty.toUpperCase() + '</span>'
+    container.appendChild(head)
+    var scores = S.loadDailyHistory(seed, difficulty)
+    var bestTime = scores.length > 0 ? scores[0].time : 0
+    var submitted = false
+    var nameInput = document.createElement('input'); nameInput.className = 'daily-input'; nameInput.type = 'text'; nameInput.placeholder = 'Your name'; nameInput.maxLength = 16; nameInput.value = S.loadDailyName()
+    var submitBtn = document.createElement('button'); submitBtn.className = 'daily-submit'; submitBtn.innerHTML = svg('send') + '<span>Save</span>'
+    var inputRow = document.createElement('div'); inputRow.className = 'daily-input-row'; inputRow.appendChild(nameInput); inputRow.appendChild(submitBtn)
+    container.appendChild(inputRow)
+    var msg = document.createElement('div'); msg.className = 'daily-msg hidden'; container.appendChild(msg)
+    var meta = document.createElement('div'); meta.className = 'daily-meta'
+    meta.innerHTML = '<span>' + svg('trophy') + ' Today\'s best: ' + fmt(bestTime) + '</span><span>' + scores.length + (scores.length === 1 ? ' run' : ' runs') + '</span>'
+    container.appendChild(meta)
+    var list = document.createElement('div'); list.className = 'daily-list lf-scroll'
+    function renderList() {
+      list.innerHTML = ''
+      if (scores.length === 0) { list.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;color:rgba(255,255,255,0.3)">No runs yet. Save this one!</div>'; return }
+      scores.forEach(function (s, i) {
+        var li = document.createElement('div'); li.className = 'daily-list-item'
+        if (i === 0) li.style.background = 'rgba(251,191,36,0.1)'
+        li.innerHTML = '<span class="rank">' + (i + 1) + '</span>' + (i === 0 ? '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>' : '') + '<span class="nm">' + escapeHtml(s.name) + '</span><span class="tm">' + fmt(s.time) + '</span>'
+        list.appendChild(li)
+      })
+    }
+    renderList(); container.appendChild(list)
+    submitBtn.onclick = function () {
+      var trimmed = (nameInput.value.trim().slice(0, 16) || 'Player')
+      S.saveDailyName(trimmed)
+      scores = S.saveDailyHistoryEntry(seed, difficulty, trimmed, time)
+      bestTime = scores.length > 0 ? scores[0].time : 0
+      var isTop = scores.length > 0 && scores[0].time === time
+      msg.className = 'daily-msg ok'; msg.textContent = isTop ? 'New daily best saved!' : 'Run saved to your history.'
+      inputRow.style.display = 'none'
+      meta.innerHTML = '<span>' + svg('trophy') + ' Today\'s best: ' + fmt(bestTime) + '</span><span>' + scores.length + (scores.length === 1 ? ' run' : ' runs') + '</span>'
+      renderList()
+    }
+  }
+
+  App.prototype.encourage = function (time, isNewBest) {
+    if (isNewBest) return 'NEW RECORD! Untouchable.'
+    if (time < 8) return 'So close! Keep moving.'
+    if (time < 20) return 'Nice flow. Push further.'
+    if (time < 40) return 'Sharp reflexes! Go again.'
+    if (time < 70) return 'Incredible focus. One more?'
+    return 'Can you beat your record?'
+  }
+
+  function escapeHtml(s) { return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] }) }
+
+  // ---------- boot ----------
+  global.LF.App = App
+  document.addEventListener('DOMContentLoaded', function () {
+    var app = new App(); app.init(); global.LF.app = app
+  })
+})(window)
+
+  </script>
+</body>
+</html>
